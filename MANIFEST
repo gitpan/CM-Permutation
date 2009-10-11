@@ -1,0 +1,15 @@
+Group_subgroup_spec
+lib/CM/Group/Sym.pm
+lib/CM/Permutation.pm
+lib/CM/Permutation/Cycle.pm
+lib/CM/Permutation/Cycle_Algorithm.pm
+t/CM-Permutation.t
+t/CM-Permutation-Cycle.t
+t/CM-Cycle_Algorithm.t
+t/CM-Group-Sym.t
+lib/CM/Permutation.pm
+Changes
+Makefile.PL
+MANIFEST
+README
+META.yml                                 Module meta-data (added by MakeMaker)
