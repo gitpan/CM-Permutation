@@ -1,7 +1,67 @@
+# 
+# This file is part of CM-Permutation
+# 
+# This software is copyright (c) 2009 by Stefan Petrea.
+# 
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+# 
+use strict;
+use warnings;
 package CM::Permutation::Cycle_Algorithm;
+our $VERSION = '0.05';
+
+
 use Moose;
 use List::AllUtils qw/first/;
+use CM::Permutation::Cycle;
 extends 'CM::Permutation';
+
+=pod
+
+=head1 NAME
+
+CM::Permutation::Cycle_Algorithm - An algorithm for finding the disjoint cycle decomposition of a permutation.
+
+=head1 VERSION
+
+version 0.05
+
+=head2 uncover_cycle()
+
+Given an element will apply the permutation to that element , then to the image of that element
+and so forth, yielding  x,p(x),p(p(x)),... and after a finite number of iterations the number will return
+to x, this defines the cycle.
+
+=head2 str_decomposed()
+
+Writes the permutation as a product of cycles and returns a string with this data.
+
+=head2 run()
+
+Returns an array containing all cycles of the permutation.
+
+=head2 get_first_unmarked()
+
+Gets the first unmarked element of the permutation(it's marked only if it's already found to be part of a cycle).
+
+=head1 SEE ALSO
+
+Abstract Algebra                            -   David S. Dummit , Richard M. Foote , page 30
+
+Combinatorial Topics Techniques Algorithms  -   Peter J. Cameron page 30
+
+=head1 AUTHOR
+
+Stefan Petrea, C<< <stefan.petrea at gmail.com> >>
+
+=cut
+
+
+
+
+
+
 
 has marked => (
     isa => 'ArrayRef[Bool]',
@@ -10,7 +70,7 @@ has marked => (
 );
 
 has cycles   => (
-    isa => 'ArrayRef[ArrayRef[Int]]',
+    isa => 'ArrayRef[ArrayRef[CM::Permutation::Cycle]]',
     is  => 'rw',
     default => sub {[]},
 );
@@ -33,7 +93,7 @@ sub uncover_cycle {
         push @$new_cycle,$current;
         last if $current == $start;
     };
-    push @{$self->cycles},$new_cycle;
+    push @{$self->cycles},CM::Permutation::Cycle->new(@$new_cycle);
 }
 
 sub run {
@@ -41,6 +101,7 @@ sub run {
     while(my $unmarked = $self->get_first_unmarked) {
         $self->uncover_cycle($unmarked);
     };
+    return @{$self->cycles};
 }
 
 sub str_decomposed {
@@ -49,10 +110,7 @@ sub str_decomposed {
     join
     ('*',
         (
-            map {
-                my $str = join(',',@{$_});
-                "($str)";
-            } @{$self->cycles}
+            map {"$_"} @{$self->cycles}
         )
     );
     $rep;

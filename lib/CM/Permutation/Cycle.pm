@@ -1,14 +1,30 @@
+# 
+# This file is part of CM-Permutation
+# 
+# This software is copyright (c) 2009 by Stefan Petrea.
+# 
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+# 
+use strict;
+use warnings;
 package CM::Permutation::Cycle;
+our $VERSION = '0.05';
+
+
 use Moose;
-use List::AllUtils qw/min max/;
+use List::AllUtils qw/min max first true/;
 use Data::Dumper;
+#use feature 'say';
 use Carp;
 
-#note: if you overload in base class you don't need to overload again in derived class
-use overload    "==" => 'equal'; # it's better to use sub names instead of coderefs
-
-
 extends 'CM::Permutation';
+
+#note: if you overload in base class you don't need to overload again in derived class
+use overload "=="=> 'equal', # it's better to use sub names instead of coderefs
+             '""'=> 'stringify_cycle', # "" and == are used by uniq from List::AllUtils in the tests
+             '*' => 'multiply';   
+
 
 has cycle_elements => (
     isa  => 'ArrayRef[Int]',
@@ -23,14 +39,16 @@ sub BUILDARGS {
     my @a = 0..max(@args);
 
 
-    map {
-        my $i = $args[ $_   ];
-        my $j = $args[ $_+1 ];
-        #       say "$i $j";
-        $a[$i] = $j;
-    } 0..-2+@args;
-    #say "$args[-1] $args[0]";
-    $a[ $args[-1] ] = $args[0];
+    if(@args>1) {
+        map {
+            my $i = $args[ $_   ];
+            my $j = $args[ $_+1 ];
+            #       say "$i $j";
+            $a[$i] = $j;
+        } 0..-2+@args;
+        #say "$args[-1] $args[0]";
+        $a[ $args[-1] ] = $args[0];
+    }
 
 
     {
@@ -39,33 +57,65 @@ sub BUILDARGS {
     };
 }
 
+sub stringify_cycle {
+    my($self) = @_;
+    return '('.@{$self->cycle_elements}.')'
+        if(@{$self->cycle_elements}==1);
+
+    my @v = @{$self->perm};
+    my @elem;
+    my $current = first { $_!=$v[$_] } 1..-1+@v;
+    my $start = $current;
+    while(1){
+        $current = $self->perm->[$current];
+        push @elem,$current;
+        last if $current == $start;
+    };
+    return '('.join(',',@elem).')';
+}
+
+
 sub BUILD {
     my($self,@args) = @_;
     # check @args has enough arguments
 }
 
+#override 'order' => 
 
-# cycles are equal up to a circular permutation
-around equal => sub {
-    my ($orig,$self,$other) = @_;
-
-
-    # if the thing we're comparing with is not a cycle then just fall back to normal compare
-    return $self->$orig($other) if !$other->isa('CM::Permutation::Cycle'); 
-
-    if($self->$orig($other)){ # first check if they are equal one-by-one
-        return 1;
-    }
-
-    my @v1 = @{$self->perm};
-    my @v2 = @{$other->perm};
-
-    my $i = @v1;
-    while($i--) {
-        unshift @v1,pop(@v1);
-        return 1 if @v1 ~~ @v2;
-    };
-    return 0;
+sub order {# the order of a cycle is its length
+    my ($self) = @_;
+    return 1
+        if(@{$self->cycle_elements}==1);
+    my @v = @{$self->perm};
+    #print Dumper $self->perm;
+    return true { $_ != $v[$_] } 1..-1+@v ;
 };
+
+
+# multiply at the same time overloads * operator and also
+# overrides the multiply from CM::Permutation
+around 'multiply' => sub {
+    my ($orig,$right,$left) = @_;
+
+    my $rmax = max(@{ $right->perm });
+    my $lmax = max(@{  $left->perm });
+    my $max = max($rmax,$lmax);
+
+    if(     $rmax<$lmax){
+        $right->perm->[$_] = $_
+            for $rmax+1..$lmax;
+    }elsif( $lmax<$rmax){
+         $left->perm->[$_] = $_
+            for $lmax+1..$rmax;
+    };
+
+    return $right->$orig($left);
+};
+
+
+
+
+
+
 
 1;

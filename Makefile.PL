@@ -1,22 +1,30 @@
-use 5.010000;
+
+use strict;
+use warnings;
+
+ BEGIN { require 5.010000; } 
+
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
+
 WriteMakefile(
-    NAME              => 'CM::Permutation',
-    VERSION_FROM      => 'lib/CM/Permutation.pm', # finds $VERSION
-    PREREQ_PM         => {
-        'List::AllUtils'    => 0,
-        'Moose'             => 0,
-        'Algorithm::Permute'=> 0,
-        'GraphViz'          => 0,
-        'Test::More'        => 0,
-        'Test::More'        => 0,
-        'Text::Table'       => 0,
-        'Carp'              => 0,
-        'Storable'          => 0,
-    }, # e.g., Module::Name => 1.1
-    ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'lib/CM/Permutation.pm', # retrieve abstract from module
-       AUTHOR         => 'Stefan Petrea <stefan.petrea@gmail.com>') : ()),
+  DISTNAME  => 'CM-Permutation',
+  NAME      => 'CM::Permutation',
+  AUTHOR    => "Stefan\ Petrea\ \<stefan\.petrea\@gmail\.com\>",
+  ABSTRACT  => "Module\ for\ manipulating\ permutations\ ",
+  VERSION   => '0.05',
+  EXE_FILES => [ qw() ],
+  (eval { ExtUtils::MakeMaker->VERSION(6.31) } ? (LICENSE => 'perl') : ()),
+  PREREQ_PM    => {
+    "Text::Table" => '0',
+    "List::AllUtils" => '0',
+    "Storable" => '0',
+    "Algorithm::Permute" => '0',
+    "Carp" => '0',
+    "Test::More" => '0',
+    "Math::BigInt" => '0',
+    "GraphViz" => '0',
+    "Moose" => '0',
+  },
+  test => {TESTS => 't/*.t'}
 );
+

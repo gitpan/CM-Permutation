@@ -1,0 +1,7 @@
+
+
+the interface for the CM::Group class should be 
+
+arrayref    -> elements
+order       -> order of the group(number of elements)
+conjugate   -> 
