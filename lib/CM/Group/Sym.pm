@@ -9,7 +9,7 @@
 use strict;
 use warnings;
 package CM::Group::Sym;
-our $VERSION = '0.05';
+our $VERSION = '0.051';
 
 
 use Moose;
@@ -30,7 +30,7 @@ CM::Group::Sym - An implementation of the finite symmetric group S_n
 
 =head1 VERSION
 
-version 0.05
+version 0.051
 
 =head1 DESCRIPTION
 

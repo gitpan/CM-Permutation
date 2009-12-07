@@ -1,5 +1,8 @@
 Revision history for Perl extension CM::Permutation.
 
+
+0.051 Mon Dec 7  01:56:00 2009
+        - Fixed a dependency for CPAN tests(dunno if this needs a new version, does it?)
 0.05  Sun Dec 2  00:38:00 2009
         - added more tests (now S_3 and S_4 are tested)
         - added some more pod

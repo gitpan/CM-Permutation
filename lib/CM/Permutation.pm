@@ -258,7 +258,7 @@ CM::Permutation - Module for manipulating permutations
 
 =head1 VERSION
 
-version 0.05
+version 0.051
 
 =head1 DESCRIPTION
 
@@ -268,6 +268,8 @@ The module is not written for generating permutations or counting them(to that e
 At the moment the following are implemented(any feature that is currently listed as implemented has tests proving it):
 
 =over
+
+=item * permutation composition and conjugate permutations
 
 =item * inverse of a permutation
 

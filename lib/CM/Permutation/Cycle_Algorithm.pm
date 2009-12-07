@@ -9,7 +9,7 @@
 use strict;
 use warnings;
 package CM::Permutation::Cycle_Algorithm;
-our $VERSION = '0.05';
+our $VERSION = '0.051';
 
 
 use Moose;
@@ -25,7 +25,7 @@ CM::Permutation::Cycle_Algorithm - An algorithm for finding the disjoint cycle d
 
 =head1 VERSION
 
-version 0.05
+version 0.051
 
 =head2 uncover_cycle()
 
