@@ -1,7 +1,15 @@
-
+about module
+------------
 
 the interface for the CM::Group class should be 
 
 arrayref    -> elements
 order       -> order of the group(number of elements)
 conjugate   -> 
+
+
+Dist::Zilla
+------------
+
+haven't found a way to include "use 5.010000;" inside the generated
+Makefile.PL

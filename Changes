@@ -1,6 +1,7 @@
 Revision history for Perl extension CM::Permutation.
 
-
+0.06  Wed Dec 9  12:03:00 2009
+        - Added conj_classes_fast
 0.051 Mon Dec 7  01:56:00 2009
         - Fixed a dependency for CPAN tests(dunno if this needs a new version, does it?)
 0.05  Sun Dec 2  00:38:00 2009

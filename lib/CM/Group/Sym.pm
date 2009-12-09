@@ -9,11 +9,10 @@
 use strict;
 use warnings;
 package CM::Group::Sym;
-our $VERSION = '0.051';
-
-
+our $VERSION = '0.06';
 use Moose;
 use CM::Permutation;
+use CM::Permutation::Cycle_Algorithm;
 use Algorithm::Permute;
 use Text::Table;
 #use feature 'say';
@@ -30,7 +29,7 @@ CM::Group::Sym - An implementation of the finite symmetric group S_n
 
 =head1 VERSION
 
-version 0.051
+version 0.06
 
 =head1 DESCRIPTION
 
@@ -296,6 +295,66 @@ sub conj_classes {
 }
 
 
+# this will do the same thing(classify elements in conjugation classes) but
+# using the fact that the conjugation classes correspond directly to the type of cycle
+# decomposition that a permutation has
+# for example S_4 has 5 classes
+#
+# (x)(x)(x)(x)
+# (xx)(x)(x)
+# (xx)(xx)
+# (xxx)(x)
+# (xxxxx)
+# 
+# where xs are elements of a cycle
+#
+# by comparison with conj_classes this(_fast) works much faster but requires additional knowledge
+# about the group in question(symmetric group in this case) whereas conj_classes is generic enough to
+# work for any group(which has a conjugation relation on it)
+
+sub conj_classes_fast {
+    my ($self) = @_;
+    # a href where conjugacy classes will be kept inside arrayrefs in the values
+    # and the keys will be labels of the form   "c1,c2,..,cn" where ci will be the lengths
+    # of the cycles making up permutations belonging to that conjugacy class, the ci will be
+    # sorted
+    my $class_href = {};
+    for my $p (@{ $self->elements }) {
+        # how can I promote a CM::Permutation object to CM::Permutation::Cycle_Algorithm ?
+        # (because they are related classes and it should be easy to inject in ISA something and
+        # get to ::Cycle_Algorithm)
+        
+        my @perm = @{$p->perm};
+        shift @perm;
+        my @cycles = CM::Permutation::Cycle_Algorithm->new(@perm)->run;
+        # the label contains the sorted lengths of the cycles of $p separated by a comma
+        my $label = join(",",
+            (
+                sort 
+                map { ~~@{ $_->cycle_elements}; } 
+                @cycles
+            )
+        );
+        $class_href->{$label} = [] 
+            unless $class_href->{$label};
+        push @{$class_href->{$label}},
+            $p;
+#        print "($p) $label\n"; 
+    };
+
+
+
+    # here warnings of type 
+    #   Argument "1,1,1" isn't numeric in numeric lt (<) at lib//CM/Group/Sym.pm line 327
+    # are well-intentioned by the Perl compiler, but in this particular case that's
+    # *exactly* what we want to do (maybe taking out commas and comparing would be a good fix for the warnings ?)
+    map {
+        $class_href->{$_}
+    }
+    sort { $a < $b } keys %$class_href;
+}
+
+
 =pod
 
 =head1 compute()
@@ -312,6 +371,19 @@ Beyond n=3 it's very hard to understand anything in the diagram(because S_n is a
 =head1 NOTES
 
 Internally the permutations are stored in arrayref of arrayrefs and each cell contains a CM::Permutation object.
+
+The tests are consisted of well-known results such as Lagrange theorem and the Class equation for groups at the moment, but they can/will be extended in the future with other well-known results.
+
+If you take a look in the cde the Class equation for groups is tested like this:
+
+    $g->order == ~~($g->center) + sum(map { ~~@{$_} } @classes)
+
+Lagrange's theorem is tested like this:
+
+    CM::Group::Sym->new({n=>7})->order() % p(1,5,4,3,6,2,7)->order == 0
+
+The ease with which you can express this equation in Perl makes it a very good candidate for implementing
+abstract algebra in.
 
 =head1 TODO
 

@@ -10,19 +10,24 @@ use Test::More 'no_plan';
 use List::AllUtils qw/sum uniq true/;
 use Test::Deep qw/cmp_deeply bag set ignore/;
 
+# TODO: need to add tests that in a conjugacy class of type lambda_1 lamda_2 ... lambda_k
+# there are exactly n! / ( lambda_1! lamda_2! ... lambda_k! 1^lambda_1 2^lambda_2 ... k^lambda_k) elements
+# where lambda_i are the number of cycles of length i in the type of element for that particular class
+# details in I. Tomescu[72] - Introducere in Combinatorica
+
 sub p{
     CM::Permutation->new(@_);
 }
 
-#sub print_classes {
-#        my $i=0;
-#        map {
-#            say "CLASS ".$i++;
-#            map {
-#                say $_;
-#            } @$_
-#        } @_;
-#}
+sub print_classes {
+        my $i=0;
+        map {
+            print "CLASS ".$i++,"\n";
+            map {
+                print "$_\n";
+            } @$_
+        } @_;
+}
 
 
 sub test_group {
@@ -40,6 +45,9 @@ sub test_group {
 
 
 
+    my @ug;
+
+    @ug = map { $g->get_inverse($_) } 1..$g->order;
 #if labelling is changed this test has to be changed as well
     my $table = "$g";
     if($n==3) {
@@ -59,6 +67,13 @@ qq{6 -> 1 2 3
 3 -> 2 1 3
 2 -> 2 3 1
 1 -> 3 2 1},'permutation labels are ok');
+    
+    
+        my @expected = (1,4,3,2,5,6);
+        
+        ok( @ug ~~ @expected , 'group inverses for S_3') if $n == 3; # every element in the group has its inverse
+        ok( ~~@ug == $g->order , 'every element in the group is inversable ');
+
     };
 
     is
@@ -71,11 +86,6 @@ qq{6 -> 1 2 3
     ) if $n==3;
 
 
-    my @ug = map { $g->get_inverse($_) } 1..$g->order;
-    my @expected = (1,4,3,2,5,6);
-    
-    ok( @ug ~~ @expected , 'group inverses for S_3') if $n == 3; # every element in the group has its inverse
-    ok( @ug ~~ $g->order , 'every element in the group is inversable ');
 
 
 
@@ -99,7 +109,7 @@ qq{6 -> 1 2 3
     @ug = sort{ $a<=>$b }(uniq(@ug));
     my @labels = (1..$g->order);
 
-    ok( @ug ~~ @labels , "general group inverse test");#(got ".join(" ",@ug)." inverses)");
+    ok( @ug ~~ @labels , "general group inverse test got ".join(" ",@ug)." inverses)");
 
 #we have $g->order elements in the group and each has a label
     ok(   ( 1 == true { $g->idempotent($_) } ( 1..$g->order ) ) , 'only one idempotent');
@@ -112,9 +122,13 @@ qq{6 -> 1 2 3
 # test equivalence classes(conjugacy classes actually)
   
     my @c = $g->conj_classes;
+    my @c_fast = $g->conj_classes_fast;
 
     if($n==3) {
-
+        # set() is not really useful here
+        # it fails to make the test independent of the order of elements inside $g->elements
+        # some Prolog-like matching would be needed to achieve this
+        # however...we don't have that
         my $p1 = $g->elements->[0];
         my $p2 = $g->elements->[1];
         my $p3 = $g->elements->[3];
@@ -141,6 +155,7 @@ qq{6 -> 1 2 3
 
 
     @c = grep { !grep { $_ == $g->identity  } @{$_} } @c; 
+    @c_fast = grep { !grep { $_ == $g->identity  } @{$_} } @c_fast; 
 #    print_classes(@c);
     # take out the class with identity element, that will be counted by Z(G) anyway
 
@@ -149,6 +164,13 @@ qq{6 -> 1 2 3
         ,
         'Class equation verified'
     ); # see http://en.wikipedia.org/wiki/Class_equation#Conjugacy_class_equation
+
+    ok(
+        $g->order == ~~($g->center) + sum(map { ~~@{$_} } @c_fast)
+        ,
+        'Class equation verified for ->conj_classes_fast()'
+    ); # see http://en.wikipedia.org/wiki/Class_equation#Conjugacy_class_equation
+
 
 #    say;
 

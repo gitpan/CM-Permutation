@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               CM-Permutation
-version:            0.051
+version:            0.06
 abstract:           Module for manipulating permutations 
 author:
     - Stefan Petrea <stefan.petrea@gmail.com>
@@ -25,7 +25,7 @@ no_index:
     directory:
         - t
         - inc
-generated_by:       ExtUtils::MakeMaker version 6.54
+generated_by:       ExtUtils::MakeMaker version 6.55_02
 meta-spec:
     url:      http://module-build.sourceforge.net/META-spec-v1.4.html
     version:  1.4
