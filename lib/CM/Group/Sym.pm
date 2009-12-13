@@ -9,7 +9,7 @@
 use strict;
 use warnings;
 package CM::Group::Sym;
-our $VERSION = '0.06';
+our $VERSION = '0.065';
 use Moose;
 use CM::Permutation;
 use CM::Permutation::Cycle_Algorithm;
@@ -29,7 +29,7 @@ CM::Group::Sym - An implementation of the finite symmetric group S_n
 
 =head1 VERSION
 
-version 0.06
+version 0.065
 
 =head1 DESCRIPTION
 
@@ -324,15 +324,12 @@ sub conj_classes_fast {
         # (because they are related classes and it should be easy to inject in ISA something and
         # get to ::Cycle_Algorithm)
         
-        my @perm = @{$p->perm};
-        shift @perm;
-        my @cycles = CM::Permutation::Cycle_Algorithm->new(@perm)->run;
         # the label contains the sorted lengths of the cycles of $p separated by a comma
         my $label = join(",",
             (
                 sort 
                 map { ~~@{ $_->cycle_elements}; } 
-                @cycles
+                $p->get_cycles
             )
         );
         $class_href->{$label} = [] 
@@ -344,10 +341,6 @@ sub conj_classes_fast {
 
 
 
-    # here warnings of type 
-    #   Argument "1,1,1" isn't numeric in numeric lt (<) at lib//CM/Group/Sym.pm line 327
-    # are well-intentioned by the Perl compiler, but in this particular case that's
-    # *exactly* what we want to do (maybe taking out commas and comparing would be a good fix for the warnings ?)
     map {
         $class_href->{$_}
     }

@@ -1,5 +1,8 @@
 Revision history for Perl extension CM::Permutation.
 
+0.065 Sun Dec 13 17:00:00 2009
+        - Added even_odd method for permutations
+        - Added more tests
 0.06  Wed Dec 9  12:03:00 2009
         - Added conj_classes_fast
 0.051 Mon Dec 7  01:56:00 2009
@@ -17,4 +20,3 @@ Revision history for Perl extension CM::Permutation.
 0.01  Sun Oct 11 04:48:50 2009
 	- original version; created by h2xs 1.23 with options
 		-XA -n CM::Permutation
-

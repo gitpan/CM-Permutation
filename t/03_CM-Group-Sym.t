@@ -7,13 +7,16 @@ use CM::Group::Sym;
 use Data::Dumper;
 #use feature 'say';
 use Test::More 'no_plan';
-use List::AllUtils qw/sum uniq true/;
+use List::AllUtils qw/reduce sum uniq true/;
 use Test::Deep qw/cmp_deeply bag set ignore/;
 
-# TODO: need to add tests that in a conjugacy class of type lambda_1 lamda_2 ... lambda_k
-# there are exactly n! / ( lambda_1! lamda_2! ... lambda_k! 1^lambda_1 2^lambda_2 ... k^lambda_k) elements
-# where lambda_i are the number of cycles of length i in the type of element for that particular class
-# details in I. Tomescu[72] - Introducere in Combinatorica
+
+
+sub fac {
+    return 1 if !$_[0];
+    return 1 unless $_[0];
+    reduce { $a * $b } 1..$_[0];
+}
 
 sub p{
     CM::Permutation->new(@_);
@@ -180,16 +183,38 @@ qq{6 -> 1 2 3
     if($n==4) {
 
 #        say "Center of S_4 is -> ".join(")(",@center);
-        my $a = p(1,2,3,4);
+        my $y = p(1,2,3,4);
         my $i = 0;
 
         ok(
-            $_*$a==$a*$_,
-            "centralizer of ($a) contains ($_)"
-        ) for $g->centralizer($a);
+            $_*$y==$y*$_,
+            "centralizer of ($y) contains ($_)"
+        ) for $g->centralizer($y);
         
         is(~~@center,1,"center of S_4 has just 1 element");
         ok($center[0]==p(1,2,3,4),'and that element is the identity permutation');
+
+        # testing number of elements in conjugacy classes
+    
+        for my $class (@c_fast){
+            # tests that in a conjugacy class of type lambda_1 lamda_2 ... lambda_k
+            # there are exactly n! / ( lambda_1! lamda_2! ... lambda_k! 1^lambda_1 2^lambda_2 ... k^lambda_k) elements
+            # where lambda_i are the number of cycles of length i in the type of element for that particular class
+            # details in I. Tomescu[72] - Introducere in Combinatorica
+            my $r = $class->[0];
+            my @type = (0) x ($n+1);
+            map {
+                $type[$_->order]++;
+            } $r->get_cycles;
+
+            my $expected = fac($n)/(
+                reduce { $a * $b }
+                map { fac($type[$_]) * ( $_**$type[$_] ) }
+                1..-1+@type
+            );
+            ok(~~@$class == $expected, "conjugacy class @type has $expected number of elements");
+
+        }
     }
 
 
@@ -198,6 +223,4 @@ qq{6 -> 1 2 3
 
 test_group $_ for 3..4;
 
-#test_group 4;
-exit;
 

@@ -15,6 +15,5 @@ t/00_CM-Permutation.t
 t/01_CM-Permutation-Cycle.t
 t/02_CM-Cycle_Algorithm.t
 t/03_CM-Group-Sym.t
-t/kwalitee.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t

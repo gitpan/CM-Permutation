@@ -12,7 +12,7 @@ package CM::Permutation;
 use strict;
 use warnings;
 use Moose;
-use List::AllUtils qw/reduce all any first uniq/;
+use List::AllUtils qw/sum reduce all any first uniq/;
 use Carp;
 use Data::Dumper;
 use Math::BigInt qw/blcm/;
@@ -200,6 +200,14 @@ sub multiply {
     );
 }
 
+sub get_cycles {
+    my ($self) = @_;
+    my @v = @{$self->perm};
+    shift @v;
+    my $alg = CM::Permutation::Cycle_Algorithm->new(@v);
+    return $alg->run;
+}
+
 ######################################################################
 #this is somewhat asymettrical because Cycle derives from Permutation
 #but order() in Cycle is used by order() in Permutation
@@ -215,11 +223,23 @@ sub order {
     #
     #
     my ($self) = @_;
-    my @v = @{$self->perm};
-    shift @v;
-    my $alg = CM::Permutation::Cycle_Algorithm->new(@v);
-    blcm(map { #print "$_ ->".$_->order."\n"; 
-            $_->order;  } $alg->run);
+    blcm(map { $_->order;  } $self->get_cycles);
+}
+
+sub even_odd {
+    my ($self) = @_;
+    # @type isn't actually needed , map should have a way of counting these so that I don't
+    # create a new data structure just for the sake of keeping some values which is only used once later on
+    my @type;#will store type of permutation( position i with value k will mean k cycles of length i in permutation)
+    map { $type[$_->order]++; } $self->get_cycles;
+
+    return sum(
+        map{
+            $type[$_]//=0;
+            ($_-1)*$type[$_];
+        } 
+        (1..-1+@type)
+    ) % 2;
 }
 
 # for some reason mul_as doesn't work
@@ -258,7 +278,7 @@ CM::Permutation - Module for manipulating permutations
 
 =head1 VERSION
 
-version 0.06
+version 0.065
 
 =head1 DESCRIPTION
 
