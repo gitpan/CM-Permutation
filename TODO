@@ -23,3 +23,13 @@ Makefile.PL
 
 
 
+
+
+
+
+
+reminders
+---------
+
+get version of all installed Perl modules 
+perl -MFile::Find=find -MFile::Spec::Functions -lwe 'find { wanted => sub { print canonpath $_ if /\.pm\z/ }, no_chdir => 1 }, @INC' | xargs grep "\$VERSION\s*="

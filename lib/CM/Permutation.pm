@@ -278,7 +278,7 @@ CM::Permutation - Module for manipulating permutations
 
 =head1 VERSION
 
-version 0.065
+version 0.07
 
 =head1 DESCRIPTION
 

@@ -9,14 +9,14 @@
 use strict;
 use warnings;
 package CM::Group::Sym;
-our $VERSION = '0.065';
+our $VERSION = '0.07';
 use Moose;
 use CM::Permutation;
 use CM::Permutation::Cycle_Algorithm;
 use Algorithm::Permute;
 use Text::Table;
 #use feature 'say';
-use List::AllUtils qw/uniq reduce first first_index/;
+use List::AllUtils qw/sum uniq reduce first first_index/;
 use overload '""' => 'stringify';
 use Math::BigInt;
 use GraphViz;
@@ -29,7 +29,7 @@ CM::Group::Sym - An implementation of the finite symmetric group S_n
 
 =head1 VERSION
 
-version 0.065
+version 0.07
 
 =head1 DESCRIPTION
 
@@ -38,13 +38,15 @@ CM::Group::Sym is an implementation of the finite Symmetric Group S_n
 =head1 SYNOPSIS
 
     use CM::Group::Sym;
-    my $G = CM::Group::Sym->new({$n=>3});
-    $G->compute();
+    my $G1 = CM::Group::Sym->new({$n=>3});
+    my $G2 = CM::Group::Sym->new({$n=>4});
+    $G1->compute();
+    $G2->compute();
 
 This way you will generate S_3 with all it's 6 elements which are permutations.
 Say you want to print the operation table(Cayley table).
     
-    print $G
+    print $G1
 
     6 5 4 3 2 1
     3 4 5 6 1 2
@@ -53,12 +55,42 @@ Say you want to print the operation table(Cayley table).
     4 3 2 1 6 5
     1 2 3 4 5 6
 
+or the table of S_4 with 24 elements
+
+    print $G2
+
+    24 23 22 21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1
+    23 24 20 16 22 18 19 15 21 17 13 14 11 12  8  4 10  6  7  3  9  5  1  2
+    22 18 19 15 23 24 20 16 11 12  8  4 21 17 13 14  9  5  1  2 10  6  7  3
+    21 17 13 14  9  5  1  2 10  6  7  3 22 18 19 15 23 24 20 16 11 12  8  4
+    20 19 18 17 24 23 22 21 12 11 10  9 16 15 14 13  4  3  2  1  8  7  6  5
+    19 20 24 12 18 22 23 11 17 21  9 10 15 16  4  8 14  2  3  7 13  1  5  6
+    18 22 23 11 19 20 24 12 15 16  4  8 17 21  9 10 13  1  5  6 14  2  3  7
+    17 21  9 10 13  1  5  6 14  2  3  7 18 22 23 11 19 20 24 12 15 16  4  8
+    16 15 14 13  4  3  2  1  8  7  6  5 20 19 18 17 24 23 22 21 12 11 10  9
+    15 16  4  8 14  2  3  7 13  1  5  6 19 20 24 12 18 22 23 11 17 21  9 10
+    14  2  3  7 15 16  4  8 19 20 24 12 13  1  5  6 17 21  9 10 18 22 23 11
+    13  1  5  6 17 21  9 10 18 22 23 11 14  2  3  7 15 16  4  8 19 20 24 12
+    12 11 10  9  8  7  6  5  4  3  2  1 24 23 22 21 20 19 18 17 16 15 14 13
+    11 12  8  4 10  6  7  3  9  5  1  2 23 24 20 16 22 18 19 15 21 17 13 14
+    10  6  7  3 11 12  8  4 23 24 20 16  9  5  1  2 21 17 13 14 22 18 19 15
+     9  5  1  2 21 17 13 14 22 18 19 15 10  6  7  3 11 12  8  4 23 24 20 16
+     8  7  6  5 12 11 10  9 24 23 22 21  4  3  2  1 16 15 14 13 20 19 18 17
+     7  8 12 24  6 10 11 23  5  9 21 22  3  4 16 20  2 14 15 19  1 13 17 18
+     6 10 11 23  7  8 12 24  3  4 16 20  5  9 21 22  1 13 17 18  2 14 15 19
+     5  9 21 22  1 13 17 18  2 14 15 19  6 10 11 23  7  8 12 24  3  4 16 20
+     4  3  2  1 16 15 14 13 20 19 18 17  8  7  6  5 12 11 10  9 24 23 22 21
+     3  4 16 20  2 14 15 19  1 13 17 18  7  8 12 24  6 10 11 23  5  9 21 22
+     2 14 15 19  3  4 16 20  7  8 12 24  1 13 17 18  5  9 21 22  6 10 11 23
+     1 13 17 18  5  9 21 22  6 10 11 23  2 14 15 19  3  4 16 20  7  8 12 24
+
+
 Note that those are only labels for the elements as printing the whole permutations
 would render the table useless since they wouldn't fit.
 
 So if you want to see the meaning of the numbers(the permutations behind them) you can use str_perm()
 
-    print $G->str_perm;
+    print $G1->str_perm;
 
     1 -> 3 2 1
     2 -> 2 3 1
@@ -467,12 +499,44 @@ sub center {
 }
 
 
+#################################################################################################
+# normal subgroups are unions of conjugacy classes so according
+# to equation class their order must be the sum of orders of conjugacy classes and
+# and of course their order must divide the order of the group by Lagrange's theorem
+# (
+# as a test we'll check that A_5 has no normal subgroups(aka simple group) but that S_4 does have normal subgroups
+# also a test will be done if any subgroup of index 2( [G:H] = 2) is normal
+# )
+#################################################################################################
 
-# orbit should also be implemented.
-# 
-# if f:GxX -> G is a group action of G on X
-# f(g,x)
-# then f(G,x) is the orbit of x
+sub normal_subgroups {
+    my ($self) = @_;
+    my @classes = $self->conj_classes_fast;
+    @classes = grep { !grep { $_ == $self->identity  } @{$_} } @classes; # take class with identity out
+    my @nsubgroups;
+
+    my $max = -1 + (2**@classes);# -1 because we include the identity in the subgroup every time(we'll add it back later)
+    for my $bitset (1..$max) {
+        my @subset = map {
+            $bitset & (1<<$_) ? 1 : 0;
+        } 0..-1+@classes;
+        print "@subset\n";
+        
+        my @N = 
+        map { @{ $classes[$_] } }
+        grep{ $subset[$_]  }
+        (0..-1+@classes);
+        
+        do {
+            print "order ".(1+@N)." \n";
+            push @nsubgroups,\@N
+        }
+            if( $self->order % (1+@N) == 0); # +1 because we add back the identity before checking order
+    };
+    return @nsubgroups;
+}
+
+
 
 
 =pod

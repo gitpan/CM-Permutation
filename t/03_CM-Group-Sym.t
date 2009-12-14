@@ -166,7 +166,7 @@ qq{6 -> 1 2 3
         $g->order == ~~($g->center) + sum(map { ~~@{$_} } @c)
         ,
         'Class equation verified'
-    ); # see http://en.wikipedia.org/wiki/Class_equation#Conjugacy_class_equation
+    ); 
 
     ok(
         $g->order == ~~($g->center) + sum(map { ~~@{$_} } @c_fast)
@@ -214,7 +214,8 @@ qq{6 -> 1 2 3
             );
             ok(~~@$class == $expected, "conjugacy class @type has $expected number of elements");
 
-        }
+        };
+        #print $g->normal_subgroups; # to uncomment this when tests for normal subgroups will be written)
     }
 
 
