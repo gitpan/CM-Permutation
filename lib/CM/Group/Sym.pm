@@ -1,7 +1,7 @@
 # 
 # This file is part of CM-Permutation
 # 
-# This software is copyright (c) 2009 by Stefan Petrea.
+# This software is copyright (c) 2010 by Stefan Petrea.
 # 
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
@@ -9,17 +9,19 @@
 use strict;
 use warnings;
 package CM::Group::Sym;
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 use Moose;
 use CM::Permutation;
 use CM::Permutation::Cycle_Algorithm;
 use Algorithm::Permute;
 use Text::Table;
 #use feature 'say';
-use List::AllUtils qw/sum uniq reduce first first_index/;
+use List::AllUtils qw/all sum uniq reduce first first_index/;
 use overload '""' => 'stringify';
 use Math::BigInt;
+use Bit::Vector;
 use GraphViz;
+use Params::Validate qw/:all/;
 
 =pod
 
@@ -29,7 +31,7 @@ CM::Group::Sym - An implementation of the finite symmetric group S_n
 
 =head1 VERSION
 
-version 0.07
+version 0.08
 
 =head1 DESCRIPTION
 
@@ -86,7 +88,8 @@ or the table of S_4 with 24 elements
 
 
 Note that those are only labels for the elements as printing the whole permutations
-would render the table useless since they wouldn't fit.
+would render the table useless since they wouldn't fit. 
+You can find that for S_5 the table would not fit on the screen (or maybe it would if you had a big enough screen, or a small enough font).
 
 So if you want to see the meaning of the numbers(the permutations behind them) you can use str_perm()
 
@@ -98,6 +101,7 @@ So if you want to see the meaning of the numbers(the permutations behind them) y
     4 -> 3 1 2
     5 -> 1 3 2
     6 -> 1 2 3
+
 
 =cut
 
@@ -113,15 +117,18 @@ has order => (
     isa => 'Int',
     is  => 'rw',
     lazy => 1,
-    default => sub {
+    builder => '_builder_order',
+);
+
+sub _builder_order {
         # n! is the order of this group
         # haven't tried to generate S_n above n=5 , but
         # n = 5 itself would actually generate a 720x720 matrix with 518400 cells,
-        # in each cell will lie one permutation , so it will be slow
+        # in each cell will lie one permutation , so it will be slow, but computing the operation table isn't
+        # really necessary..
         my $self = shift;
         reduce { $a * $b  } 1..$self->n;
-    }
-);
+}
 
 
 #or Cayley table , however you want to call it
@@ -155,6 +162,17 @@ sub stringify {
 
 sub label_to_perm {
     my ($self,$label) = @_;
+    validate_pos(
+        @_,
+        1,  # $self
+        {   # $label
+            type        => SCALAR ,
+            callbacks   => {
+                '1<= $label <= |G|', sub { my $v = shift; 1<=$v && $v <= $self->order }
+            },
+        }
+    );
+
     my $where = $self->order - $label;
     return $self->operation_table->[0]->[$where];
 }
@@ -248,15 +266,25 @@ sub compute {
 
 
 # coset of an element g \in G for the subgroup H<G is   gH = {g*h1,g*h2,...,g*hn} where n=|H|
-sub coset {
+sub left_coset {
     my ($self,$g,$H) = @_;
     # g must be in self
-    # H must be subgroup of G(no way to check that yet)
+    # H must be subgroup of G(no way to check that implemented yet)
 
     return
     uniq
     map { $self->perm2label($_); }
     map { $g * $_ } 
+    @{$H->elements};
+}
+
+sub right_coset {
+    my ($self,$g,$H) = @_;
+
+    return
+    uniq
+    map { $self->perm2label($_); }
+    map { $_ * $g } 
     @{$H->elements};
 }
 
@@ -278,14 +306,17 @@ sub coset {
 #this is more slow and would have been much smaller but I'm avoiding the overhead
 
 #find conjugate classes (this could be factored out in CM::Algorithm::EquivalenceClasses as a Moose Role)
+
+
+=head1 conj_classes()
+
+find the conjugacy classes using the definition of conjugates.
+
+=cut
+
 sub conj_classes {
-    #TODO:  find out where memory leak resides in this sub
-    #       it gets memory to 85% for 1GB ram, not very good
     my ($self) = @_;
 
-    # if I put this(2lines below)
-    # in ->gen_perms instead I get a 20s delay the cause of which I was unable to find ...
-    # with either the Perl debugger or Devel::NYTProf 
     $self->elements->[$_]->group($self) 
     for 0..-1+@{$self->elements};
 
@@ -305,10 +336,6 @@ sub conj_classes {
             my $first_from_class = $Classes[$i_class]->[0];
 
             my $g = first {
-#                say "another test";
-#                say $_->label;
-#                say $to_place->label;
-#                $_*($to_place*($_**-1)) == $first_from_class
                  $_*($to_place*($_**-1)) == $first_from_class
             } @gelems; # if there is a $g then $to_place and $first_from_class are conjugates
                        # first() will return undef if there is no such $g
@@ -327,6 +354,21 @@ sub conj_classes {
 }
 
 
+=head1 conj_classes_fast()
+
+finds the conjugacy classes of a group using cycle structure.
+for example, the conjugacy classes of S_4 correspond to partitions of the number 4:
+
+    (x)(x)(x)(x)
+    (xx)(x)(x)
+    (xx)(xx)
+    (xxx)(x)
+    (xxxxx)
+
+so S_4 has 5 conjugacy classes.
+
+=cut
+
 # this will do the same thing(classify elements in conjugation classes) but
 # using the fact that the conjugation classes correspond directly to the type of cycle
 # decomposition that a permutation has
@@ -343,6 +385,7 @@ sub conj_classes {
 # by comparison with conj_classes this(_fast) works much faster but requires additional knowledge
 # about the group in question(symmetric group in this case) whereas conj_classes is generic enough to
 # work for any group(which has a conjugation relation on it)
+#
 
 sub conj_classes_fast {
     my ($self) = @_;
@@ -386,50 +429,15 @@ sub conj_classes_fast {
 
 Computes the operation table.
 
-=head1 draw_cayley_digraph($path)
+=head1 draw_diagram($path)
 
-This method will draw the cayley digraph of the group to png to the given $path.
+This method will draw a diagram of the group to png to the given $path.
 You can read the graph as follows.
 An edge from X to Y with a label Z on it that means X * Z = Y where X,Y,Z are labels of permutations.
-Beyond n=3 it's very hard to understand anything in the diagram(because S_n is a big group in general).
-
-=head1 NOTES
-
-Internally the permutations are stored in arrayref of arrayrefs and each cell contains a CM::Permutation object.
-
-The tests are consisted of well-known results such as Lagrange theorem and the Class equation for groups at the moment, but they can/will be extended in the future with other well-known results.
-
-If you take a look in the cde the Class equation for groups is tested like this:
-
-    $g->order == ~~($g->center) + sum(map { ~~@{$_} } @classes)
-
-Lagrange's theorem is tested like this:
-
-    CM::Group::Sym->new({n=>7})->order() % p(1,5,4,3,6,2,7)->order == 0
-
-The ease with which you can express this equation in Perl makes it a very good candidate for implementing
-abstract algebra in.
-
-=head1 TODO
-
-
-
-=over
-
-=item * cache_perms to store permutations instead of storing them inside operation_table
-and 2 methods label2perm and perm2label
-
-=item * writing code for calculating the subgroup lattice of a group S_n and representing it in a nice way 
-
-=item * hardcoding well-known groups , their isomorphic subgroup of S_n and using that before an exhaustive check in the previous point
-
-=item * making a routine that will check if a subgroup's operation table is equal to some particular subgroup of some S_n(since order of S_n is n! above n>5 there isn't much hope for this) and if so identify them as being isomorphic.
-
-=back
 
 =cut
 
-sub draw_cayley_digraph {
+sub draw_diagram {
     my ($self,$path) = @_;
     my $order = $self->order;
     my $graph = GraphViz->new(
@@ -454,6 +462,13 @@ sub draw_cayley_digraph {
     $graph->as_png($path // "/var/www/docs/graph.png");
 }
 
+
+=head1 identity()
+
+return the identity permutation for this group
+
+=cut 
+
 sub identity {
     my ($self) = @_;
     my $e = CM::Permutation->new(1..$self->n);
@@ -465,6 +480,13 @@ sub identity {
 
 # centralizer of an element in the group
 # TODO: replace in all the code $self->order - index with index and fix all tests after that
+
+=head1 centralizer(element)
+
+this method returns the centralizer of an element in the group.
+(note that the centralizer can be different in some particular subgroup)
+
+=cut
 
 sub centralizer {
     my ($self,$a) = @_;
@@ -486,6 +508,12 @@ sub centralizer {
 }
 
 
+=head1 center()
+
+returns the center of the group
+
+=cut 
+
 sub center {
     my ($self) = @_;
     my @result;
@@ -499,8 +527,14 @@ sub center {
 }
 
 
+=head1 normal_subgroups()
+
+computes the normal subgroups of a group of permutations
+
+=cut
+
 #################################################################################################
-# normal subgroups are unions of conjugacy classes so according
+# normal subgroups are unions of conjugacy classes(this can be proved) so according
 # to equation class their order must be the sum of orders of conjugacy classes and
 # and of course their order must divide the order of the group by Lagrange's theorem
 # (
@@ -515,20 +549,27 @@ sub normal_subgroups {
     @classes = grep { !grep { $_ == $self->identity  } @{$_} } @classes; # take class with identity out
     my @nsubgroups;
 
-    my $max = -1 + (2**@classes);# -1 because we include the identity in the subgroup every time(we'll add it back later)
-    for my $bitset (1..$max) {
+    # my $max = -1 + (2**@classes);# -1 because we include the identity in the subgroup every time(we'll add it back later)
+    my $vec = Bit::Vector->new(scalar @classes);
+
+    while(!$vec->increment) {#stop when we have a carry(->increment returns something) because that's when we overflowed and it's clear that we iterated over all subsets
+
+        # enumerate all bitstrings of length scalar @classes as there is a correspondence
+        # between these bitstrings and the subsets of some set(the set of all conjugacy classes here)
         my @subset = map {
-            $bitset & (1<<$_) ? 1 : 0;
+            $vec->contains($_);
         } 0..-1+@classes;
-        print "@subset\n";
+        
+        print $vec->to_Bin."\n";
         
         my @N = 
         map { @{ $classes[$_] } }
         grep{ $subset[$_]  }
         (0..-1+@classes);
-        
+        next if @N+1 == $self->order; # exclude the whole group G
         do {
             print "order ".(1+@N)." \n";
+            push @N,$self->identity;#put indentity back
             push @nsubgroups,\@N
         }
             if( $self->order % (1+@N) == 0); # +1 because we add back the identity before checking order
@@ -538,8 +579,107 @@ sub normal_subgroups {
 
 
 
+=head1 dimino(@S)
+
+given a set of generators @S , Dimino's algorithm(see [2] for details) enumerates all elements of the subgroup <@S> generated by the set @S
+
+=cut
+sub dimino {
+    # Dimino's algorithm for computing the elements of a group given it's generators
+    #
+    # for details check G. Butler - Fundamental Algorithms on Permutation Groups pages 14-22
+
+
+    # the first position of @S and @elements is filled to make elements start from index 1
+
+    my ($self,@S) = @_;
+    @S              =($self->identity,@S);
+    my @elements    =($self->identity,$self->identity);
+
+    my $order = 1;
+    my $g = $S[1];
+
+    sub not_in{ # returns true if $elem is not to be found in the elements @$aref
+        my ($elem,$aref) = @_;
+        return all { $_ != $elem } @{$aref};
+    }; # aparrently  $element !~~ @array didn't work(although == is implemented for permutations)
+       # so had to write something to test if a permutation belongs to a set or not
+
+    sub p{
+        CM::Permutation->new(@_);
+    };
+#    print "not there" if
+#    my @t1 = ( p(1,3,4,2), p(1,2,4,3) );
+#
+#    not_in(p(1,2,3,4),\@t1);
+#    exit;
+#    my @t = (p(1,2,3,4));
+#    print "good" if not_in(p(1,3,2,4),\@t);
+#    print "wrong" if not_in(p(1,2,3,4),\@t);
+#    exit;
+
+    while($g!=$self->identity) {
+        $order++;
+        push @elements,$g;
+        $g = $g * $S[1];
+    };
+
+    for my $i (2..~~@S-1) {
+        if( not_in($S[$i],\@elements) ) { # next generator not redundant
+            my $previous_order = $order;
+            $elements[++$order]=$S[$i];
+            for my $j (2..$previous_order) {
+                $elements[++$order] = $elements[$j] * $S[$i];
+            };
+            my $rep_pos = $previous_order + 1;
+            while(1){
+                for my $s (@S[1..$i]) { # for each s in S_i (where S_i is the truncated S to first i elements)
+                    my $elt = $elements[$rep_pos] * $s;
+                    if( not_in($elt,\@elements) ){ # adding the right coset of $elt
+                        $elements[++$order] = $elt;
+                        for my $j(2..$previous_order) {
+                            $elements[++$order] = $elements[$j] * $elt;
+                        }
+                    }
+                };
+                $rep_pos += $previous_order;
+                last if $rep_pos > $order;
+            }
+        }
+    };
+    shift @elements; # take out the dummy identity permutation we put at first for indexes to start at 1 in the begining
+    return @elements;
+}
+
+
 
 =pod
+
+=head1 THEOREMS AS TESTS
+
+The implementation is using some theorems(such as Lagrange's theorem, the class equation, Cauchy's theorem) as
+ tests. This way of using theorems offers some sense of security that what was implemented is indeed correct.
+Check the tests attached to this distribution for more details.
+
+=head1 RELATION TO GEOMETRY
+
+Groups are not as abstract as they seem. 
+Some permutation groups can relate to geometric objects such as a cube, a tetrahedron or a dodecahedron(actually, all platonic 
+solids have associated rotation group, which is a group of isometries that fixes a particular regular polyhedron).
+
+There is a strong relation between S_4 and the group of rotations of a cube. 
+In a similar way there is an isomorphism between A_5(the even permutations of 5 objects) and the group of rotations
+of the dodecahedron and also between A_4 and the group of rotations of a tetrahedron and also between the groups of rotations
+of an icosahedron and A_5.
+
+=head1 PATCHES
+
+Patches/suggestions are always welcome.
+
+=head1 BIBLIOGRAPHY
+
+    [1] Joseph Rotman   - An Introduction to the Theory of Groups
+    [2] Gregory Butler  - Fundamental Algorithms for Permutation Groups (Lecture Notes in Computer Science)
 
 =head1 AUTHOR
 

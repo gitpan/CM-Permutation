@@ -1,5 +1,12 @@
 Revision history for Perl extension CM::Permutation.
 
+0.08  Mon Jan 4  15:03:00 2010
+        - Added some more documentation.
+        - Added CM::Group::Altern
+        - Replaced bithacks with Bit::Vector
+        - Added Dimino's algorithm for computing all elements of a subgroup of S_n given its generators
+          and also added tests for it
+        - Added tests for normal_subgroups()
 0.065 Sun Dec 13 17:00:00 2009
         - Added even_odd method for permutations
         - Added more tests

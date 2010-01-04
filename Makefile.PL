@@ -11,7 +11,7 @@ WriteMakefile(
   NAME      => 'CM::Permutation',
   AUTHOR    => "Stefan\ Petrea\ \<stefan\.petrea\@gmail\.com\>",
   ABSTRACT  => "Module\ for\ manipulating\ permutations\ ",
-  VERSION   => '0.07',
+  VERSION   => '0.08',
   EXE_FILES => [ qw() ],
   (eval { ExtUtils::MakeMaker->VERSION(6.31) } ? (LICENSE => 'perl') : ()),
   PREREQ_PM    => {
@@ -21,10 +21,12 @@ WriteMakefile(
     "Algorithm::Permute" => '0',
     "Carp" => '0',
     "Test::More" => '0',
+    "Bit::Vector" => '7.1',
+    "Params::Validate" => '0.94',
     "Math::BigInt" => '0',
     "GraphViz" => '0',
     "Test::Deep" => '0.106',
-    "Moose" => '0.93',
+    "Moose" => '0.92',
   },
   test => {TESTS => 't/*.t'}
 );

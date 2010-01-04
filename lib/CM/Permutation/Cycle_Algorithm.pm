@@ -1,7 +1,7 @@
 # 
 # This file is part of CM-Permutation
 # 
-# This software is copyright (c) 2009 by Stefan Petrea.
+# This software is copyright (c) 2010 by Stefan Petrea.
 # 
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
@@ -9,7 +9,7 @@
 use strict;
 use warnings;
 package CM::Permutation::Cycle_Algorithm;
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 use Moose;
 use List::AllUtils qw/first/;
 use CM::Permutation::Cycle;
@@ -23,7 +23,7 @@ CM::Permutation::Cycle_Algorithm - An algorithm for finding the disjoint cycle d
 
 =head1 VERSION
 
-version 0.07
+version 0.08
 
 =head2 uncover_cycle()
 

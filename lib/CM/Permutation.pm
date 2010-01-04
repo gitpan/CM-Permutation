@@ -1,7 +1,7 @@
 # 
 # This file is part of CM-Permutation
 # 
-# This software is copyright (c) 2009 by Stefan Petrea.
+# This software is copyright (c) 2010 by Stefan Petrea.
 # 
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
@@ -16,13 +16,22 @@ use List::AllUtils qw/sum reduce all any first uniq/;
 use Carp;
 use Data::Dumper;
 use Math::BigInt qw/blcm/;
-use CM::Permutation::Cycle_Algorithm;
+use Params::Validate;
+
+# require is used here because there is the following dependency chain
+#
+# Permutation -> Cycle_Algorithm -> Cycle -> Permutation
+#
+# so it's circular and 'require' solves this
+
+require CM::Permutation::Cycle_Algorithm;
 #use feature 'say';
 use overload    "*" => \&multiply,
                 "*=" => \&mul_as,
                 "**" => \&power,
                 "<<" => \&conjugate,
                 "==" => \&equal,
+                "!=" => sub{ !equal(@_); },
                 "cmp"=> \&equal,
                 "eq" => \&equal,
                 '""' => 'stringify'; # "" and == are used by uniq from List::AllUtils in the tests
@@ -161,6 +170,8 @@ sub power {
 
 # TODO:need check that both @_ are C::P
 sub equal {
+    return 0 unless $_[0];
+    return 0 unless $_[1];
     if($_[0]->label && $_[1]->label) {
 #        say "iar!!";
         return $_[0]->label == $_[1]->label;
@@ -226,6 +237,8 @@ sub order {
     blcm(map { $_->order;  } $self->get_cycles);
 }
 
+
+# returns 1 -> odd , 0 -> even
 sub even_odd {
     my ($self) = @_;
     # @type isn't actually needed , map should have a way of counting these so that I don't
@@ -278,7 +291,7 @@ CM::Permutation - Module for manipulating permutations
 
 =head1 VERSION
 
-version 0.07
+version 0.08
 
 =head1 DESCRIPTION
 
@@ -293,30 +306,17 @@ At the moment the following are implemented(any feature that is currently listed
 
 =item * inverse of a permutation
 
-=item * cycle decomposition
-
 =item * power of a permutation
 
 =item * '==' operator implemented (eq is the same)
 
-=back
+=item * order() method
 
+=item * even_odd(x) to classify even and odd permutations
 
-=head1 TODO
+=item * conjugate(x,y) which test if there is a g so that x = g y g^-1
 
-=over
-
-=item * breaking cycles into transpositions( maybe making a transposition class)
-
-=item * write a routine to count inversions and then even() and odd() methods for CM::Permutation
-
-=item * writing as much tests as possible
-
-=item * writing routine is_cycle() to check if a permutation is a cycle
-
-=item * get Cycle_Algorithm to use ArrayRef[CM::Permutation::Cycle] instead of what it's using now for storing the cycles and re-write tests
-
-=item * add order() method for ::Permutation (will be different for ::Permutation::Cycle , where just the length is the order) and will be computed as gcd of lenghts of cycles.::Permutation (will be different for ::Permutation::Cycle , where just the length is the order) and will be computed as gcd of lenghts of cycles.
+=item * get_cycles() decomposes permutation into cycles and returns them
 
 =back
 
@@ -330,6 +330,10 @@ Stefan Petrea, C<< <stefan.petrea at gmail.com> >>
 L<Algorithm::Permute> or L<Math::Counting> 
 
 L<http://en.wikipedia.org/wiki/Cycle_(mathematics)>
+
+L<CM::Group::Sym>
+
+L<CM::Group::Altern>
 
 =cut
 
