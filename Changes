@@ -1,5 +1,11 @@
 Revision history for Perl extension CM::Permutation.
 
+0.4   Wed Feb 24 13:37:00 2010
+        - Added Dihedral group
+        - Added ModuleMultiplicativeGroup
+        - Added CM::Rubik which models the rubik's cube
+        - Added an OpenGL application to visualize the moves of the Rubik's cube
+        - Added some more tests
 0.08  Mon Jan 4  15:03:00 2010
         - Added some more documentation.
         - Added CM::Group::Altern

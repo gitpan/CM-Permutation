@@ -9,7 +9,7 @@
 use strict;
 use warnings;
 package CM::Permutation::Cycle;
-our $VERSION = '0.08';
+our $VERSION = '0.4';
 use Moose;
 use List::AllUtils qw/min max first true/;
 use Data::Dumper;

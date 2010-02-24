@@ -9,19 +9,37 @@
 use strict;
 use warnings;
 package CM::Group::Sym;
-our $VERSION = '0.08';
+our $VERSION = '0.4';
 use Moose;
 use CM::Permutation;
 use CM::Permutation::Cycle_Algorithm;
 use Algorithm::Permute;
-use Text::Table;
 #use feature 'say';
-use List::AllUtils qw/all sum uniq reduce first first_index/;
+use List::AllUtils qw/zip all sum uniq reduce first first_index/;
 use overload '""' => 'stringify';
 use Math::BigInt;
 use Bit::Vector;
-use GraphViz;
+use Carp;
 use Params::Validate qw/:all/;
+with 'CM::Group' => { element_type => 'CM::Permutation'  };
+
+#
+# making the tuple type and using it as a parameter for this role will require reading
+#
+# perldoc -f blessed
+# preldoc -f ref
+#
+# http://search.cpan.org/~flora/MooseX-Types-Structured-0.20/lib/MooseX/Types/Structured.pm
+# http://search.cpan.org/~drolsky/Moose-0.98/lib/Moose/Meta/Role.pm
+# http://search.cpan.org/~drolsky/Moose-0.98/lib/Moose/Meta/Class.pm
+# http://search.cpan.org/~drolsky/Class-MOP-0.98/lib/Class/MOP/Class.pm
+#
+
+
+
+
+
+
 
 =pod
 
@@ -31,7 +49,7 @@ CM::Group::Sym - An implementation of the finite symmetric group S_n
 
 =head1 VERSION
 
-version 0.08
+version 0.4
 
 =head1 DESCRIPTION
 
@@ -40,8 +58,8 @@ CM::Group::Sym is an implementation of the finite Symmetric Group S_n
 =head1 SYNOPSIS
 
     use CM::Group::Sym;
-    my $G1 = CM::Group::Sym->new({$n=>3});
-    my $G2 = CM::Group::Sym->new({$n=>4});
+    my $G1 = CM::Group::Sym->new({n=>3});
+    my $G2 = CM::Group::Sym->new({n=>4});
     $G1->compute();
     $G2->compute();
 
@@ -87,9 +105,20 @@ or the table of S_4 with 24 elements
      1 13 17 18  5  9 21 22  6 10 11 23  2 14 15 19  3  4 16 20  7  8 12 24
 
 
+
 Note that those are only labels for the elements as printing the whole permutations
 would render the table useless since they wouldn't fit. 
 You can find that for S_5 the table would not fit on the screen (or maybe it would if you had a big enough screen, or a small enough font).
+
+You can also see a coloured Cayley table(the labels of the permutations are associated to colours):
+
+=begin html
+
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/CM-Permutation/S_4_colour.PNG" /></center></p>
+
+=end html
+
+
 
 So if you want to see the meaning of the numbers(the permutations behind them) you can use str_perm()
 
@@ -106,19 +135,24 @@ So if you want to see the meaning of the numbers(the permutations behind them) y
 =cut
 
 
-has n => (
-    isa => 'Int',
-    is  => 'rw',
-    default => undef,
-    required => 1,
-);
+#has n => (
+    #isa => 'Int',
+    #is  => 'rw',
+    #default => undef,
+    #required => 1,
+#);
 
-has order => (
-    isa => 'Int',
-    is  => 'rw',
-    lazy => 1,
-    builder => '_builder_order',
-);
+#has order => (
+    #isa => 'Int',
+    #is  => 'rw',
+    #lazy => 1,
+    #builder => '_builder_order',
+#);
+
+sub operation {
+    my ($self,$a,$b) = @_;
+    return $a*$b;
+}
 
 sub _builder_order {
         # n! is the order of this group
@@ -132,32 +166,23 @@ sub _builder_order {
 
 
 #or Cayley table , however you want to call it
-has operation_table => (
-    isa => 'ArrayRef[ArrayRef[CM::Permutation]]',
-    is  => 'rw',
-    default => sub{[]},
-);
+#has operation_table => (
+    #isa => 'ArrayRef[ArrayRef[CM::Permutation]]',
+    #is  => 'rw',
+    #default => sub{[]},
+#);
 
-has elements => (
-    isa => 'ArrayRef[CM::Permutation]',
-    is  => 'rw',
-    default => sub {[]},
-);
-
+#has elements => (
+    #isa => 'ArrayRef[CM::Permutation]',
+    #is  => 'rw',
+    #default => sub {[]},
+#);
 
 # todo -> cache permutations by string representations to make * faster
-sub stringify {
-    my ($self) = @_;
-    my $table = Text::Table->new;
-    my $order = $self->order; #reduce { $a * $b  } 1..$self->n;
-    my @for_table;
-    for my $i (0..-1+$order) {
-        my @new_line = map{ $_->label  } @{$self->operation_table->[$i]};
-        push @for_table,\@new_line;
-    }
-    $table->load( @for_table );
-    return "$table";
-}
+
+
+
+
 
 
 sub label_to_perm {
@@ -224,44 +249,17 @@ sub BUILD {
 
 
 # generate all permutations of the set {1..n}
-sub gen_perms {
+sub compute_elements {# should be a standard method name for all groups
     my ($self) = @_;
     my $label = 0;
     my @permutations;
     my $p = new Algorithm::Permute([1..$self->n]);
     while (my @new_perm = $p->next) {
         my $new_one = CM::Permutation->new(@new_perm);
-        $new_one->label(++$label);
-        unshift @permutations,$new_one;
+        $self->add_to_elements($new_one);
     };
-    return @permutations;
 }
 
-sub perm2label {
-    my ($self,$perm) = @_;
-    return
-        ( first { $_ == $perm } @{$self->elements} )->label;
-}
-
-sub label2perm { }
-
-# compute all elements of the group
-sub compute {
-    my ($self) = @_;
-    $self->elements([$self->gen_perms]);
-
-    my $order = $self->order;
-    # *ij is actually an alias(typeglob) to $self->operation_table->[$i]->[$j]
-    for my $i (0..-1+$order) {
-        for my $j (0..-1+$order) {
-            local *i   = \$self->elements->[$i];
-            local *j   = \$self->elements->[$j];
-            local *ij   = \$self->operation_table->[$i]->[$j];
-            ${*ij} = ${*i} * ${*j};
-            ${*ij}->label($self->perm2label(${*ij}));
-        }
-    }
-}
 
 
 
@@ -437,30 +435,7 @@ An edge from X to Y with a label Z on it that means X * Z = Y where X,Y,Z are la
 
 =cut
 
-sub draw_diagram {
-    my ($self,$path) = @_;
-    my $order = $self->order;
-    my $graph = GraphViz->new(
-        center => 1 ,
-        ratio => 'fill',
-        width => 30,
-        height => 30,
-        layout => 'twopi'
-    );
-    for my $i (0..-1+$order) {
-        for my $j (0..-1+$order) {
-            my $from    = $self->operation_table->[0]->[$j]->label;
-            my $to      = $self->operation_table->[$i]->[$j]->label;
-            my $with    = $self->operation_table->[$i]->[0]->label;
-            #say "from=$from to=$to with=$with";
-            $graph->add_edge(
-                $from => $to,
-                label => $with
-            );
-        }
-    };
-    $graph->as_png($path // "/var/www/docs/graph.png");
-}
+
 
 
 =head1 identity()
@@ -535,7 +510,7 @@ computes the normal subgroups of a group of permutations
 
 #################################################################################################
 # normal subgroups are unions of conjugacy classes(this can be proved) so according
-# to equation class their order must be the sum of orders of conjugacy classes and
+# to equation class their order must be the sum of orders of conjugacy classes 
 # and of course their order must divide the order of the group by Lagrange's theorem
 # (
 # as a test we'll check that A_5 has no normal subgroups(aka simple group) but that S_4 does have normal subgroups
@@ -593,30 +568,16 @@ sub dimino {
     # the first position of @S and @elements is filled to make elements start from index 1
 
     my ($self,@S) = @_;
-    @S              =($self->identity,@S);
-    my @elements    =($self->identity,$self->identity);
-
-    my $order = 1;
-    my $g = $S[1];
+    @S            = ($self->identity,@S);
+    my @elements  = ($self->identity,$self->identity);
+    my $order     = 1;
+    my $g         = $S[1];
 
     sub not_in{ # returns true if $elem is not to be found in the elements @$aref
         my ($elem,$aref) = @_;
         return all { $_ != $elem } @{$aref};
     }; # aparrently  $element !~~ @array didn't work(although == is implemented for permutations)
        # so had to write something to test if a permutation belongs to a set or not
-
-    sub p{
-        CM::Permutation->new(@_);
-    };
-#    print "not there" if
-#    my @t1 = ( p(1,3,4,2), p(1,2,4,3) );
-#
-#    not_in(p(1,2,3,4),\@t1);
-#    exit;
-#    my @t = (p(1,2,3,4));
-#    print "good" if not_in(p(1,3,2,4),\@t);
-#    print "wrong" if not_in(p(1,2,3,4),\@t);
-#    exit;
 
     while($g!=$self->identity) {
         $order++;
@@ -626,8 +587,8 @@ sub dimino {
 
     for my $i (2..~~@S-1) {
         if( not_in($S[$i],\@elements) ) { # next generator not redundant
-            my $previous_order = $order;
-            $elements[++$order]=$S[$i];
+            my $previous_order  = $order;
+            $elements[++$order] = $S[$i];
             for my $j (2..$previous_order) {
                 $elements[++$order] = $elements[$j] * $S[$i];
             };
@@ -653,33 +614,43 @@ sub dimino {
 
 
 
+
+=head1 cayley_digraph($path,$generators_arrayref)
+
+computes the Cayley graph of a group given the generators.
+
+for example the graph for S_4 with generators the transpositions (1,2) ; (2,3) ; (3,4) looks like this:
+
+
+
+=begin html
+
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/CM-Permutation/Cayley_S_4.gif" /></center></p>
+
+=end html
+
+Fortunately this particular cayley graph can be arranged as a truncated octahedron and it's one of the 13 Archimedian solids , 
+it's also called a permutahedron.
+
+L<http://en.wikipedia.org/wiki/Truncated_octahedron>
+
+L<http://en.wikipedia.org/wiki/Cayley_graph>
+=cut
+
+# polyhedrons generated as an arrangement of the cayley graph are called permutahedra
+
+
 =pod
 
 =head1 THEOREMS AS TESTS
 
-The implementation is using some theorems(such as Lagrange's theorem, the class equation, Cauchy's theorem) as
- tests. This way of using theorems offers some sense of security that what was implemented is indeed correct.
-Check the tests attached to this distribution for more details.
-
-=head1 RELATION TO GEOMETRY
-
-Groups are not as abstract as they seem. 
-Some permutation groups can relate to geometric objects such as a cube, a tetrahedron or a dodecahedron(actually, all platonic 
-solids have associated rotation group, which is a group of isometries that fixes a particular regular polyhedron).
-
-There is a strong relation between S_4 and the group of rotations of a cube. 
-In a similar way there is an isomorphism between A_5(the even permutations of 5 objects) and the group of rotations
-of the dodecahedron and also between A_4 and the group of rotations of a tetrahedron and also between the groups of rotations
-of an icosahedron and A_5.
-
-=head1 PATCHES
-
-Patches/suggestions are always welcome.
+Some theorems and properties of groups or permutations are used as tests.
 
 =head1 BIBLIOGRAPHY
 
     [1] Joseph Rotman   - An Introduction to the Theory of Groups
     [2] Gregory Butler  - Fundamental Algorithms for Permutation Groups (Lecture Notes in Computer Science)
+    [3] http://www.jaapsch.net/puzzles/cayley.htm
 
 =head1 AUTHOR
 

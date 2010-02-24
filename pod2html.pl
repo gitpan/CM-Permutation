@@ -34,3 +34,4 @@ $parser->html_css('http://search.cpan.org/s/style.css');
 
 $parser->output_fh(*OUT);
 $parser->parse_file(*IN);
+

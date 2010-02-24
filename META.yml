@@ -1,33 +1,31 @@
 --- #YAML:1.0
-name:               CM-Permutation
-version:            0.08
-abstract:           Module for manipulating permutations 
-author:
+name:                CM-Permutation
+version:             0.4
+abstract:            Module for manipulating permutations 
+license:             perl
+author:              
     - Stefan Petrea <stefan.petrea@gmail.com>
-license:            perl
-distribution_type:  module
-configure_requires:
-    ExtUtils::MakeMaker:  0
-build_requires:
-    ExtUtils::MakeMaker:  0
-requires:
-    Algorithm::Permute:  0
-    Bit::Vector:         7.1
-    Carp:                0
-    GraphViz:            0
-    List::AllUtils:      0.02
-    Math::BigInt:        0
-    Moose:               0.92
-    Params::Validate:    0.94
-    Storable:            0
-    Test::Deep:          0.106
-    Test::More:          0
-    Text::Table:         1.114
-no_index:
-    directory:
-        - t
-        - inc
-generated_by:       ExtUtils::MakeMaker version 6.55_02
+generated_by:        ExtUtils::MakeMaker version 6.42
+distribution_type:   module
+requires:     
+    Acme::AsciiArt2HtmlTable:      0
+    Algorithm::Permute:            0
+    Bit::Vector:                   7.1
+    Carp:                          0
+    ExtUtils::MakeMaker:           6.11
+    GraphViz:                      0
+    List::AllUtils:                0.02
+    Math::BigInt:                  0
+    Math::Polynomial:              1.002
+    Moose:                         0.92
+    MooseX::Role::Parameterized:   0.17
+    OpenGL:                        0.62
+    overload:                      0
+    Params::Validate:              0.94
+    Storable:                      0
+    Test::Deep:                    0.106
+    Test::More:                    0
+    Text::Table:                   1.114
 meta-spec:
-    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
-    version:  1.4
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3
