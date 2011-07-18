@@ -1,15 +1,14 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 package CM::Permutation;
-our $VERSION = '0.4';
 use strict;
 use warnings;
 use Moose;
@@ -32,7 +31,8 @@ use overload    "*" => \&multiply,
                 "**" => \&power,
                 "^"  => \&conj,
                 "%"  => "com",
-                "<<" => \&conjugate,
+                "<<" => 'conjugate',
+				"^" => 'conjugate',
                 "==" => \&equal,
                 "!=" => sub{ !equal(@_); },
                 "cmp"=> \&equal,
@@ -58,7 +58,7 @@ has group => (
     isa => 'Any',
     is  => 'rw',
     default => undef,
-    weak_ref=> 1,
+    #weak_ref=> 1,
 );
 
 sub BUILDARGS {
@@ -130,9 +130,10 @@ sub stringify {
 sub power {
     #for now supports powers -1 and >=1
     my ($self,$power) = @_;
-    return $self->inverse if $power == -1;
-    
+    return $self->inverse                               if $power == -1;
+    return CM::Permutation->new(1..max(@{$self->perm})) if $power ==  0;
 
+    # should replace this with reduce
     my $r = $self;
     while(--$power) {
         my $n = $r * $self;
@@ -140,6 +141,27 @@ sub power {
     };
     return $r;
 }
+
+sub power_fast {
+	my ($self,$power) = @_;
+
+	reduce { $a * $b }
+	map { $_ ** ($power % $_->order); }
+	$self->get_cycles;
+}
+
+sub print_cycles {
+	my ($self) = @_;
+
+	print "\n";
+	print
+	join(
+		'',
+		map { "$_\n" } 
+		($self->get_cycles)
+	);
+}
+
 
 sub inverse {
     my ($self) = @_;
@@ -234,7 +256,10 @@ sub multiply {
         @ret;
     } (1..$max);
 
-    return CM::Permutation->new(@p);
+    my $result = CM::Permutation->new(@p);
+    $result->group($right->{group});
+
+    return $result;
 }
 
 sub get_cycles {
@@ -290,14 +315,25 @@ sub mul_as {
 #
 sub conj {
     my ($b,$a) = @_;
-    ($a**-1)*$b*$a;
+    my $result = ($a**-1)*$b*$a;
+    $result->group($a->{group});
+    return $result;
 }
 
 
 # commutator
 sub com {
     my ($a,$b) = @_;
-    ($a**-1)*($b**-1)*$a*$b;
+
+    confess 'a doesn\'t belong to any group ?'
+        unless defined($a->{group});
+
+    confess 'b doesn\'t belong to any group ?'
+        unless defined($b->{group});
+
+    my $result = ($a**-1)*($b**-1)*$a*$b;
+    $result->group($a->{group});
+    return $result;
 }
 
 
@@ -307,17 +343,29 @@ sub conjugate {
     my ($a,$b) = @_;# $a is actually $self
     confess 'a undefined' unless $a;
     confess 'b undefined' unless $b;
-    confess 'no group for a' unless $a->group;
-    confess 'no group for b' unless $b->group;
+    confess 'no group for a' unless defined $a->{group};
+    confess 'no group for b' unless defined $b->{group};
     #confess "element doesn't have a group" unless $a->group ;
 #    say Dumper $a->group;
 #    say Dumper $b->group;
 #    exit;
     my $i = 0;
-    return first {
-#        say $i++;
-        $_*$a*($_**-1) == $b
-    } @{$a->group->elements};
+
+    print "hereeee\n";
+
+    my @elems = @{$a->group->elements};
+    my $result = first {
+        print "before lhs\n";
+        my $lhs = $_*$a*($_**-1);
+        print "after  lhs\n";
+        $lhs == $b
+    } @elems;
+    print "after first ran\n";
+    if(defined($result)) {
+        $result->group($a->{group});
+    };
+
+    return $result;
 }
 
 
@@ -332,14 +380,12 @@ sub apply {
     shift @p;# the front 0
 
 
-    @ret = map { $set[$_-1] }  @p; # -1 to be in @set indexes
+    @ret = map { $set[$_-1] }  @p; # -1 to get index like @set indexes
 
     @ret = (@ret , @set[max(@p)..-1+@set]);
 
 
-    # put the non-permuted part back in the result, we don't want to upset noone
-
-
+    # put the non-permuted part back in the result
     return @ret;
 }
 
@@ -367,13 +413,9 @@ sub apply_sub {
 
 CM::Permutation - Module for manipulating permutations 
 
-=head1 VERSION
-
-version 0.4
-
 =head1 DESCRIPTION
 
-The module was written for carrying out permutation operations.
+The module was written for carrying out permutation operations. This module treats permutations as bijections on finite sets.
 The module is not written for generating permutations or counting them(to that end you can use L<Algorithm::Permute> or L<Math::Counting>)
 
 At the moment the following are implemented(any feature that is currently listed as implemented has tests proving it):
@@ -398,6 +440,104 @@ At the moment the following are implemented(any feature that is currently listed
 
 =back
 
+=head1 Permutations in relation to braids
+
+There's also a draw() method so if you want to visualize permutations as braids you can.
+
+For example permutation (9,6,4,8,5,3,7,10,1,2) can be representated as a braid like this:
+
+=begin html
+
+<p><center><img src="images/a.PNG" /></center></p>
+
+=end html
+
+and permutation (6,10,2,9,6,1,7,8,4,5) is like this 
+
+=begin html
+
+<p><center><img src="images/b.PNG" /></center></p>
+
+=end html
+
+Then you can also compute a*b
+
+=begin html
+
+<p><center><img src="images/atimesb.PNG" /></center></p>
+
+=end html
+
+And also a*b*a^-1
+
+=begin html
+
+<p><center><img src="images/aconjb.PNG" /></center></p>
+
+=end html
+
+And also [a,b] which is a*b*a^-1*b^-1
+ 
+=begin html
+
+<p><center><img src="images/acommb.PNG" /></center></p>
+
+=end html
+
+=head1 Viewing cycles
+
+Cycles have the following shape (except they can have some fixed points inside them)
+
+[1,2,3,4,5]
+
+=begin html
+
+<p><center><img src="images/cycle1.PNG" /></center></p>
+
+=end html
+
+or like this
+
+
+=begin html
+
+<p><center><img src="images/cycle2.PNG" /></center></p>
+
+=end html
+
+
+=head1 Some differences between brides and permutations
+
+However, braids are more general than permutations. The twists that are the analog of transpositions(in symmetric groups)
+for braids have infinite order since you can twist 2 strands as many times you want.
+Another difference is that for a transposition x we have x = x^-1, but with braids that isn't true since you have the first strand above the second for x and for x^-1 you have the second over the first so you can un-twist the braid using x^-1.
+
+
+
+=head1 Transpositions and cycles
+
+To understand better how transpositions and cycles interact let's take a look at the following diagram which shows the effects of multiplying a permutation formed of two cycles with a transposition containing members from each of the cycles:
+
+=begin html
+
+<p><center><img src="images/cycle_glue.png" /></center></p>
+
+=end html
+
+
+Let's have an example of this with the cycles [1,2,3,4] , [5,6,7,8] and the transposition [3,7] :
+
+    ./shell.sh
+
+
+    $ decomp(cycle(1,2,3,4)*cycle(5,6,7,8))
+    (2,3,4,1)*(6,7,8,5)
+    $ decomp(cycle(1,2,3,4)*cycle(5,6,7,8)*cycle(3,7))
+    (2,3,8,5,6,7,4,1)
+
+=head1 ACKNOWLEDGMENTS
+
+Thanks for the colour ramp routine goes to BrowserUk @perlmonks
 
 =head1 AUTHOR
 
@@ -416,3 +556,4 @@ L<CM::Group::Altern>
 =cut
 
 1;
+

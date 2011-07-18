@@ -1,16 +1,15 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 #==================================================================================================================================
-package Rubik::Cubie;
-our $VERSION = '0.4'; # small cubie that composes the big one
+package Rubik::Cubie; # small cubie that composes the big one
 use Moose;
 use OpenGL; 
 
@@ -19,10 +18,6 @@ use OpenGL;
 
 Rubik::Cubie
 
-
-=head1 VERSION
-
-version 0.4
 
 =head1 DESCRIPTION
 
@@ -133,12 +128,13 @@ this cube will help with understanding what's going on in the code, the numbers 
          GL_QUADS,
          sub {
              for(my $i=0;$i<6;$i++){
+				 # the 6 facelets of a cubie are coloured based on the property
                  glColor3f(@{$self->colours->[$i]});
 
 
                  for(my $j=0;$j<4;$j++){
                      my $k=$self->faces->[$i]->[$j];
-                     glVertex3d(@{$v[$k]});
+                     glVertex3f(@{$v[$k]});
                  }
 
              }

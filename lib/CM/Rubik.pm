@@ -1,15 +1,14 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 package CM::Rubik;
-our $VERSION = '0.4';
 use strict;
 use warnings;
 use Moose;
@@ -24,10 +23,6 @@ use List::AllUtils qw/reduce/;
 
 CM::Rubik - Rubik's cube
 
-=head1 VERSION
-
-version 0.4
-
 =head1 DESCRIPTION
 
 The Rubik's cube is known primarily as a toy puzzle, which has associated the Rubik's cube group.
@@ -39,11 +34,22 @@ The order of the group is 43_252_003_274_489_856_000 , yeah, that's :
 Forty-three quintillion two hundred fifty-two quadrillion three trillion two hundred seventy-four billion four hundred eighty-nine  
 million eight hundred fifty-six thousand. But at least it's not infinite right ? :)
 
-There's also a simulation of Rubik's cube written using OpenGL and Perl, using CM::Permutation and CM::Rubik in order to implement the 
+There's also a simulator of Rubik's cube written using OpenGL and Perl, using CM::Permutation and CM::Rubik in order to implement the 
 logic of the rotations:
 
 
 
+=head1 comb(string)
+
+This will give you the permutation which results from multiplying the sequence of transformations in the string.
+It returns a CM::Permutation object.
+OBS: you can also find the order(the number of times you make those moves until the cube returns to the position before you started them)
+using the order() method on the result, so for example:
+
+	my $r = CM::Rubik->new;
+	print $r->comb('FURBL');
+
+	252
 
 
 

@@ -1,15 +1,14 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 package CM::Group::Dihedral;
-our $VERSION = '0.4';
 use Moose;
 use CM::Permutation;
 use Carp;
@@ -28,10 +27,6 @@ with 'CM::Group' => { element_type => 'CM::Permutation'  };
 
 CM::Group::Dihedral - An implementation of the finite dihedral group D_2n
 
-=head1 VERSION
-
-version 0.4
-
 =head1 DESCRIPTION
 
 This group is formed of the reflectional and rotational symmetries of a regular polygon with n edges.
@@ -39,31 +34,58 @@ It is also the symmetry group of a regular polygon.
 
 =head1 SYNOPSIS
 
-    use CM::Group::Sym;
-    my $g = CM::Group::Dihedral->new({n=>5});
-    $g->compute;
-    print "$g";
+	use CM::Group::Dihedral;
+	my $g = CM::Group::Dihedral->new({n=>10});
+	$g->compute;
+	print "$g";
 
-     1 10  9  8  7  6  5  4  3  2 19 18 17 16 15 14 13 12 11 20
-     2  1 10  9  8  7  6  5  4  3 18 17 16 15 14 13 12 11 20 19
-     3  2  1 10  9  8  7  6  5  4 17 16 15 14 13 12 11 20 19 18
-     4  3  2  1 10  9  8  7  6  5 16 15 14 13 12 11 20 19 18 17
-     5  4  3  2  1 10  9  8  7  6 15 14 13 12 11 20 19 18 17 16
-     6  5  4  3  2  1 10  9  8  7 14 13 12 11 20 19 18 17 16 15
-     7  6  5  4  3  2  1 10  9  8 13 12 11 20 19 18 17 16 15 14
-     8  7  6  5  4  3  2  1 10  9 12 11 20 19 18 17 16 15 14 13
-     9  8  7  6  5  4  3  2  1 10 11 20 19 18 17 16 15 14 13 12
-    10  9  8  7  6  5  4  3  2  1 20 19 18 17 16 15 14 13 12 11
-    11 20 19 18 17 16 15 14 13 12  9  8  7  6  5  4  3  2  1 10
-    12 11 20 19 18 17 16 15 14 13  8  7  6  5  4  3  2  1 10  9
-    13 12 11 20 19 18 17 16 15 14  7  6  5  4  3  2  1 10  9  8
-    14 13 12 11 20 19 18 17 16 15  6  5  4  3  2  1 10  9  8  7
-    15 14 13 12 11 20 19 18 17 16  5  4  3  2  1 10  9  8  7  6
-    16 15 14 13 12 11 20 19 18 17  4  3  2  1 10  9  8  7  6  5
-    17 16 15 14 13 12 11 20 19 18  3  2  1 10  9  8  7  6  5  4
-    18 17 16 15 14 13 12 11 20 19  2  1 10  9  8  7  6  5  4  3
-    19 18 17 16 15 14 13 12 11 20  1 10  9  8  7  6  5  4  3  2
-    20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1
+	1 10  9  8  7  6  5  4  3  2  19 18 17 16 15 14 13 12 11 20
+	2  1 10  9  8  7  6  5  4  3  18 17 16 15 14 13 12 11 20 19
+	3  2  1 10  9  8  7  6  5  4  17 16 15 14 13 12 11 20 19 18
+	4  3  2  1 10  9  8  7  6  5  16 15 14 13 12 11 20 19 18 17
+	5  4  3  2  1 10  9  8  7  6  15 14 13 12 11 20 19 18 17 16
+	6  5  4  3  2  1 10  9  8  7  14 13 12 11 20 19 18 17 16 15
+	7  6  5  4  3  2  1 10  9  8  13 12 11 20 19 18 17 16 15 14
+	8  7  6  5  4  3  2  1 10  9  12 11 20 19 18 17 16 15 14 13
+	9  8  7  6  5  4  3  2  1 10  11 20 19 18 17 16 15 14 13 12
+	10  9  8  7  6  5  4  3  2  1 20 19 18 17 16 15 14 13 12 11
+	11 20 19 18 17 16 15 14 13 12  9  8  7  6  5  4  3  2  1 10
+	12 11 20 19 18 17 16 15 14 13  8  7  6  5  4  3  2  1 10  9
+	13 12 11 20 19 18 17 16 15 14  7  6  5  4  3  2  1 10  9  8
+	14 13 12 11 20 19 18 17 16 15  6  5  4  3  2  1 10  9  8  7
+	15 14 13 12 11 20 19 18 17 16  5  4  3  2  1 10  9  8  7  6
+	16 15 14 13 12 11 20 19 18 17  4  3  2  1 10  9  8  7  6  5
+	17 16 15 14 13 12 11 20 19 18  3  2  1 10  9  8  7  6  5  4
+	18 17 16 15 14 13 12 11 20 19  2  1 10  9  8  7  6  5  4  3
+	19 18 17 16 15 14 13 12 11 20  1 10  9  8  7  6  5  4  3  2
+	20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1
+
+
+	$g->rearrange; # we rearrange so that identity sits on the first diagonal
+	print "$g";
+
+
+	 1 10  9  8  7  6  5  4  3  2 19 18 17 16 15 14 13 12 11 20
+	 2  1 10  9  8  7  6  5  4  3 18 17 16 15 14 13 12 11 20 19
+	 3  2  1 10  9  8  7  6  5  4 17 16 15 14 13 12 11 20 19 18
+	 4  3  2  1 10  9  8  7  6  5 16 15 14 13 12 11 20 19 18 17
+	 5  4  3  2  1 10  9  8  7  6 15 14 13 12 11 20 19 18 17 16
+	 6  5  4  3  2  1 10  9  8  7 14 13 12 11 20 19 18 17 16 15
+	 7  6  5  4  3  2  1 10  9  8 13 12 11 20 19 18 17 16 15 14
+	 8  7  6  5  4  3  2  1 10  9 12 11 20 19 18 17 16 15 14 13
+	 9  8  7  6  5  4  3  2  1 10 11 20 19 18 17 16 15 14 13 12
+	10  9  8  7  6  5  4  3  2  1 20 19 18 17 16 15 14 13 12 11
+	19 18 17 16 15 14 13 12 11 20  1 10  9  8  7  6  5  4  3  2
+	18 17 16 15 14 13 12 11 20 19  2  1 10  9  8  7  6  5  4  3
+	17 16 15 14 13 12 11 20 19 18  3  2  1 10  9  8  7  6  5  4
+	16 15 14 13 12 11 20 19 18 17  4  3  2  1 10  9  8  7  6  5
+	15 14 13 12 11 20 19 18 17 16  5  4  3  2  1 10  9  8  7  6
+	14 13 12 11 20 19 18 17 16 15  6  5  4  3  2  1 10  9  8  7
+	13 12 11 20 19 18 17 16 15 14  7  6  5  4  3  2  1 10  9  8
+	12 11 20 19 18 17 16 15 14 13  8  7  6  5  4  3  2  1 10  9
+	11 20 19 18 17 16 15 14 13 12  9  8  7  6  5  4  3  2  1 10
+	20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1
+
 
 These are labels of the elements and not the elements themselves(which internally are represented as permutations).
 
@@ -76,7 +98,21 @@ You can also see a coloured Cayley table(the labels of the permutations are asso
 
 =end html
 
+
+
+
+This is the Cayley graph of D_5:
+
+
+=begin html
+
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/CM-Permutation/dihedral.gif" /></center></p>
+
+=end html
+
+
 =cut
+
 
 
 # Rgen and Sgen are the canonical generators of this group
@@ -94,27 +130,29 @@ sub Sgen {
     # through the first point of the polygon
 }
 
-sub compute_elements {
+sub _compute_elements {
     my ($self) = @_;
-    my $n    = $self->n;
-    my $half = $n / 2;
-    $self->tlabel(1);# reset initial label for elements
+	sub {
+		my $n    = $self->n;
+		my $half = $n / 2;
+		$self->tlabel(1);# reset initial label for elements
 
-    my @rotated;
+		my @rotated;
 
-    my $I = CM::Permutation->new(1..$n);
+		my $I = CM::Permutation->new(1..$n);
 
-    my ($R,$S) = ($self->Rgen,$self->Sgen);
-    
-    
-    for(1..$n) {
-        $self->add_to_elements($I);
-        push @rotated,$I;
-        $I = $I * $R;
-    };
+		my ($R,$S) = ($self->Rgen,$self->Sgen);
 
-    my @reflected = 
-        map { $self->add_to_elements($S * $_) } @rotated;
+
+		for(1..$n) {
+			$self->add_to_elements($I);
+			push @rotated,$I;
+			$I = $I * $R;
+		};
+
+		my @reflected = 
+		map { $self->add_to_elements($S * $_) } @rotated;
+	}
 }
 
 
@@ -142,7 +180,7 @@ sub identity {
     my $e = CM::Permutation->new(1..$self->n);
     first {
         $_ == $e;
-    } @{ $self->operation_table->[0] };
+    } @{ $self->elements };
 }
 
 # TODO: use http://search.cpan.org/~bobtfish/MooseX-Role-WithOverloading-0.05/lib/MooseX/Role/WithOverloading.pm

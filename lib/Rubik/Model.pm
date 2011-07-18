@@ -1,30 +1,29 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 package Rubik::Model;
-our $VERSION = '0.4';
+use strict;
+use warnings;
 use Moose;
 use lib './lib';
 use CM::Rubik;
 use Rubik::Cubie;
-use List::AllUtils qw/reduce/;
+#use Data::Match;
+use List::AllUtils qw/reduce firstidx/;
+use overload  '""' => 'stringify'; 
 
 
 =head1 NAME
 
 Rubik::Model
 
-
-=head1 VERSION
-
-version 0.4
 
 =head1 DESCRIPTION
 
@@ -100,6 +99,7 @@ has cubies => (
     isa => 'Any',
     is  => 'rw',
     default => sub {
+		# init cubies positions and all that stuff
         my ($self) = @_;
         my $C=[];
         my $d = $self->distance; # distance between centers of cubies
@@ -118,9 +118,22 @@ has cubies => (
         $C;
     },
     required => 0,
-    lazy => 1,
+    lazy     => 1,
 );
 
+has state       => (
+	isa      => 'CM::Permutation',
+	is       => 'rw',
+	default  => sub { 
+		my ($self) = @_;
+		$self->rubik->I ;
+	},
+	required => 0,
+	lazy     => 1,
+);
+
+
+# centers are invariant to this scrambling 
 sub scramble {
     my ($self) = @_;
     my @pmoves = qw/F B U D R L/;
@@ -177,13 +190,92 @@ sub scramble {
 #     Up          |1   |2    |3   |
 #                 |    |     |    |
 #                 .----|-----|----.
+#
+#
+#
+#(yes, that arrow for up is ugly)
 
 
+# returns if facelets @many should be on the same face
+sub should_be_same_face {
+	my ($self,@many) = @_;
+	confess "at least 2 arguments needed" unless @many >= 2;
+	reduce { $a && $b }
+	map {
+		$self->should_belong_to($many[$_   ] ) eq
+		$self->should_belong_to($many[$_+1 ] );
+	} (0..@many-2);
+}
+
+
+# returns if facelets @many are on the same face
+sub same_face {
+	my ($self,@many) = @_;
+	confess "at least 2 arguments needed" unless @many >= 2;
+	reduce { $a && $b }
+	map {
+		$self->belongs_to($many[$_   ] ) eq
+		$self->belongs_to($many[$_+1 ] );
+	} (0..@many-2);
+}
+
+
+# returns the face to which a facelet should belong to
+
+sub should_belong_to {
+	my ($self,$n) = @_;
+	return 'R' if $n >= 28 && $n <=36;
+	return 'F' if $n >= 1  && $n <=9;
+	return 'D' if $n >= 10 && $n <=18;
+	return 'B' if $n >= 37 && $n <=45;
+	return 'L' if $n >= 46 && $n <=54;
+	return 'U' if $n >= 19 && $n <=27;
+}
+
+# the face that facelet $n belongs to is the should_belong_to of the index of the position which indicates to it
+# (it sounds weird, but just think a moment about it ...)
+# TODO:add a more clear explanation
+
+sub belongs_to {
+	my ($self,$n) = @_;
+	$self->should_belong_to(
+
+		firstidx 
+		{$self->state->perm->[$_] == $n } 
+		(1..54)
+
+	);
+}
+
+sub is_center {
+	my ($self,$n) = @_;
+	my @a = (5,50,41,32,14,23);
+	return $n ~~ @a;
+}
+
+sub is_corner   {
+	my ($self,$n) = @_;
+	my @a = (
+		4 , 8 , 5 , 4 , 5 , 2 , 4 , 6 ,
+		2 , 1 , 2 , 7 , 2 , 5 , 1 , 9 ,
+		7 , 9 , 3 , 1 ,
+		3 , 6 , 3 , 0 , 2 , 8 , 3 , 4 ,
+		1 , 8 , 1 , 2 , 1 , 0 , 1 , 6 ,
+		3 , 7 , 3 , 9 , 4 , 3 , 4 , 5
+	);
+	return $n ~~ @a;
+}
+
+sub is_edge	{
+	my ($self,$n) = @_;
+	return !($self->is_center($n)||$self->is_corner($n));
+}
 
 
 # we're mapping the set [1..54] onto each of the visible faces of the 3x3x3 cubies that compose the
 # rubik's cube, this is what this function does. I'm sure it could have more elegantly written with a good
 # formula to map them ... however this will do for the moment
+
 
 sub getColor {
     my($self,$n,$c) = @_;
@@ -250,35 +342,159 @@ sub move_perm { #move according to a given permutation
     confess "not the same number of colours returned" unless ~~@new_colors == ~~@old_colors;
 
     $self->setColor($_,$new_colors[$_]) for (0..-1+@new_colors);
+    
+    $self->state($self->state * $perm);
 }
 
+
+
+sub move_until {
+	my ($self,$what_move,$until) = @_;
+	while(1) {
+		$self->move->$what_move;
+		last if $until->();
+	};
+}
+
+
+
+sub solve_cross {
+	my ($self) = @_;
+
+	# 14 is the center of the down face .. which we want to make a cross on
+	
+}
 
 sub valid {
     my ($self,$move) = @_;
     return $move =~ /^[FBUDRL]i?$/;
 }
 
+sub valid_moves {
+	my ($self,$moves) = @_;
+	return $moves =~ /^([FBUDRL]i?)+$/;
+}
+
+sub moves {
+    my ($self,$moves) = @_;
+
+    confess "parameter moves undefined or empty" unless $moves;
+    confess "invalid move syntax" unless $self->valid_moves($moves);
+
+    while(my ($move) = $moves =~ s/^([FBUDRL]i?)//) {
+	    $self->move($move);
+    };
+
+}
+
 
 sub move {
-    # because games are not a simulation but are meant to be fun, we don't actually move the cubies, we just
-    # permute the faces of the cubies so as to give the illusion that the rotation has really occured
+    # because games are not perfect simulations but are meant to be fun, we don't actually move the cubies, we just
+    # permute the faces of the cubies so as to give the illusion that the rotation really persisted
 
     my ($self,$move) = @_;
     confess 'only moves are F,B,U,D,R,L and their inverses' unless $self->valid($move);
     
 
+    my $pmove = $self->rubik->$move;# permutation associated with this move
 
     my @old_colors = map { $self->getColor($_-1) } (1..54);
-    my @new_colors = $self->rubik->$move->apply( @old_colors ); # apply permutation to them and put them in new_colors
+    my @new_colors = $pmove->apply( @old_colors ); # apply permutation to them and put them in new_colors
 
     confess "not the same number of colours returned" unless ~~@new_colors == ~~@old_colors;
 
     $self->setColor($_,$new_colors[$_]) for (0..-1+@new_colors);
+
+    $self->state($self->state * $pmove);
+}
+
+sub stringify {
+	my ($self) = @_;
+	my $p = $self->state;
+	return "$p";
 }
 
 sub BUILD {
     my ($self) = @_;
     $self->view->model($self);
+}
+
+
+
+# maybe should replace the following functions with hardcoded vals
+# make_2D_aref get_face [FURBLD]face
+
+sub make_2D_aref {
+	# make 2D 3x3 array
+	my ($self,@numbers) = @_;
+	[
+		[ $numbers[0..2] ],
+		[ $numbers[3..5] ],
+		[ $numbers[6..8] ],
+	];
+}
+
+# get the numbers of facelets to return in a 3x3 array
+sub get_face {
+	my ($self,@numbers) = @_;
+	$self->make_2D_aref(
+		map { $self->state->perm->[$_] } @numbers
+	);
+}
+
+sub Fface {
+	my ($self) = @_;
+	$self->get_face(
+		7,8,9,
+		4,5,6,
+		1,2,3
+	);
+}
+
+sub Rface {
+	my ($self) = @_;
+	$self->get_face(
+		34,35,36,
+		31,32,33,
+		28,29,30
+	);
+}
+
+sub Bface {
+	my ($self) = @_;
+	$self->get_face(
+		45,44,43,
+		42,41,40,
+		39,38,37,
+	);
+}
+
+sub Lface {
+	my ($self) = @_;
+	$self->get_face(
+		54,53,52,
+		51,50,49,
+		48,47,46,
+	);
+}
+
+
+sub Uface {
+	my ($self) = @_;
+	$self->get_face(
+		21,24,27,
+		20,23,26,
+		19,22,25,
+	);
+}
+
+sub Dface {
+	my ($self) = @_;
+	$self->get_face(
+		12,15,18,
+		11,14,17,
+		10,13,16,
+	);
 }
 
 
@@ -293,3 +509,4 @@ Stefan Petrea, C<< <stefan.petrea at gmail.com> >>
 1;
 
 #==================================================================================================================================
+

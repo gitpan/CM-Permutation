@@ -1,27 +1,24 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 package Rubik::View;
-our $VERSION = '0.4';
 use Moose;
-use OpenGL;
+use OpenGL qw(:all);
+use Time::HiRes qw(usleep);
+use feature ':5.10';
 
 
 
 =head1 NAME
 
-Rubik::View - The view module for Rubik's cube simulation
-
-=head1 VERSION
-
-version 0.4
+Rubik::View - The view module for Rubik's cube simulator
 
 =head1 DESCRIPTION
 
@@ -33,11 +30,18 @@ vertices and current rotation angle and current move and the width/height of the
 
 # what face is currently rotated
 has currentmove => (
-        isa=> 'Str',
-        # is => 'rw', #because it's syntax suggar for reader => "attrname" , writer => 'attrname' and I'm not using that because I made my own
-        default=> '',
-        writer=> 'set_currentmove',
-        reader=> 'get_currentmove',
+        isa     => 'Str',
+        # is    => 'rw', #because it's syntax suggar for reader => "attrname" , writer => 'attrname' and I'm not using that because I made my own
+        default => '',
+        writer  => 'set_currentmove',
+        reader  => 'get_currentmove',
+);
+
+has CustomDrawCode => (
+    isa     => 'CodeRef',
+    is      => 'rw',
+    default => sub { sub{}  },
+    lazy    => 1,
 );
 
 
@@ -71,13 +75,13 @@ has spin     => (
 has width  => (
     isa => 'Int',
     is  =>'rw',
-    default => 400
+    default => 1024
 );
 
 has height  => (
     isa => 'Int',
     is  =>'rw',
-    default=> 400
+    default=> 900
 );
 
 has model => (
@@ -94,59 +98,138 @@ sub Draw {
     glEnd();
 }
 
-sub Reshape {
+#sub Reshape {
+    #glMatrixMode(GL_PROJECTION);
+    #glPushMatrix();
+    #glLoadIdentity();
+
+    ## first parameter is eye position
+    ## second is center position
+    ## third is the direction the camera is looking at
+
+    #gluPerspective(1000.0, 1.0 , 1.0, 30.0); 
+    #glMatrixMode(GL_MODELVIEW);
+    #glPushMatrix();
+
+
+    ## I think gluLookAt doesn't work at all here and there's supposed to be only one projection, and that should be
+    ## GL_MODELVIEW , but it doesn't really work ...
+    #gluLookAt(120,120,100,
+              #0  ,  0,  0,
+              #-1 , -1, -1,
+          #);
+    #glLoadIdentity();
+#}
+
+sub InitGL {              
+
+    # Shift the width and height off of @_, in that order
+    my ($self,$width, $height) = @_;
+
+    # Set the background "clearing color" to black
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+
+    # Enables clearing of the Depth buffer 
+    glClearDepth(1.0);                    
+
+    # The type of depth test to do
+    glDepthFunc(GL_LESS);         
+
+    # Enables depth testing with that type
+    glEnable(GL_DEPTH_TEST);              
+    
+    # Enables smooth color shading
+    glShadeModel(GL_SMOOTH);      
+
+    # Reset the projection matrix
     glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
+    glLoadIdentity;
 
-    # first parameter is eye position
-    # second is center position
-    # third is the direction the camera is looking at
+    # Calculate the aspect ratio of the Window
+    gluPerspective(45.0, $width/$height, 0.1, 100.0);
 
-    gluPerspective(1000.0, 1.0 , 1.0, 30.0); 
+    # Reset the modelview matrix
     glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
 
 
-    # I think gluLookAt doesn't work at all here and there's supposed to be only one projection, and that should be
-    # GL_MODELVIEW , but it doesn't really work ...
-    gluLookAt(120,100,100,
-              0  ,  0,  0,
-              -1 , -1, -1,
-          );
-    glLoadIdentity();
 }
+
+sub ReSizeGLScene {
+
+}
+
+
+
+
+
 
 sub Init {
     my ($self) = @_;
-    glpOpenWindow(width => $self->width, height => $self->height,
-        attributes => [GLX_RGBA,GLX_DOUBLEBUFFER]);
-    glClearColor(0,0,0,1);
-    glShadeModel (GL_FLAT);
-    $self->Reshape();
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHT0);
-    glLoadIdentity();
 
-# Thu 18 Feb 2010 06:01:19 PM EST
-# apply these to object... or camera ?
-# anyway the camera apparently doesn't want to move how it's supposed to with gluLookAt so I'm using this as a substitute
-#
-# but apparently http://www.opengl.org/resources/faq/technical/viewing.htm  is a very good source of information
-    glTranslatef (1,7,-20);
-    glRotatef(45,0,1,0);
+    my $window;
+
+# --- Main program ---
+
+# Initialize GLUT state
+    glutInit;  
+
+# Select type of Display mode:   
+# Double buffer 
+# RGB color (Also try GLUT_RGBA)
+# Alpha components removed (try GLUT_ALPHA) 
+# Depth buffer */  
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);  
+
+# Get a 640 x 480 window
+    glutInitWindowSize($self->width, $self->height);  
+
+# The window starts at the upper left corner of the screen
+    glutInitWindowPosition(0, 0);  
+
+# Open the window  
+    $window = glutCreateWindow("Jeff Molofee's GL Code Tutorial ... NeHe '99");  
+
+# Register the function to do all our OpenGL drawing.
+
+    my $draw_frame_ref = sub { $self->DrawFrame };
+    glutDisplayFunc($draw_frame_ref);  
+
+# Go fullscreen.  This is as soon as possible. 
+    glutFullScreen;
+
+# Even if there are no events, redraw our gl scene.
+    glutIdleFunc($draw_frame_ref);
+
+# Register the function called when our window is resized. 
+    glutReshapeFunc(\&ReSizeGLScene);
+
+# Register the function called when the keyboard is pressed.
+    glutKeyboardFunc(\&keyPressed);
+
+# Initialize our window.
+    $self->InitGL($self->width, $self->height);
+
+
+    glutMainLoop;  
 }
 
 sub DrawFrame {
     my ($self,$sub) = @_;# sub is the sub called for drawing the frame
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPushMatrix();
-    #$sub->($self->currentmove);
+    # Clear the screen and the depth buffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
+    glLoadIdentity;
+
+
+    say "rendered!";
+    glTranslatef(-1.5, -3.0, -16.0); 
+    glRotatef(50,0,0,0);
+    glRotatef(-45,0,1,0);
+
+    $self->CustomDrawCode->();
+
     $self->rotate_face;
-    glPopMatrix();
-    glFlush();
-    glXSwapBuffers;
+
+    glutSwapBuffers;
 }
 
 
@@ -178,6 +261,7 @@ sub rotate_face {
                     push @to_rotate,[$x,$y,$z];
                     next;
                 };
+                say $self->model;
                 $self->model->cubies->[$x]->[$y]->[$z]->Draw();
             }
         }

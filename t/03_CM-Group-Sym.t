@@ -11,6 +11,8 @@ use List::AllUtils qw/each_array each_arrayref reduce sum uniq true/;
 use Test::Deep qw/cmp_deeply bag set ignore/;
 
 
+# TODO: to replace fac with bfac from Math::BigInt
+
 
 sub fac {
     return 1 if !$_[0];
@@ -191,8 +193,11 @@ qq{6 -> 1 2 3
 
 
 
+
     my @center = $g->center;
     if($n==4) {
+		
+		ok( $g->stabilizer(3) == 6 , "there are 6 elements in Stab(3)");
 
 #        say "Center of S_4 is -> ".join(")(",@center);
         my $y = p(1,2,3,4);
@@ -228,7 +233,7 @@ qq{6 -> 1 2 3
             ok(~~@$class == $expected, "conjugacy class @type has $expected number of elements");
 
         };
-        my @normal_subgroups = $g->normal_subgroups; # to uncomment this when tests for normal subgroups will be written)
+        my @normal_subgroups = $g->normal_subgroups;
 
         for my $H ( @normal_subgroups ) {
             my $res = 1;
@@ -242,6 +247,7 @@ qq{6 -> 1 2 3
                 $res &= $H->{"$_"} 
                     for @right_coset;
                 $label  = join ';',@left_coset;
+				# have checked if left_coset and right_coset basically contain the same elements
             };
             ok($res,"normal subgroup [[$label]]");
         };
@@ -278,7 +284,6 @@ qq{6 -> 1 2 3
         ok(!$vec->to_Dec,'Cauchy theorem proved for S_5'); # $vec->to_Dec needs to be 0, if it's more than 0 then some orders haven't been found among the orders of elements of the group
     };
 
-
 }
 
 
@@ -288,8 +293,6 @@ test_group $_ for 3..4;
 
 
 
+
+
 done_testing();
-
-
-
-

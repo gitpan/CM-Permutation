@@ -1,31 +1,30 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 # this will be a bit like mocking a class since most of the API needs to be faked to make the
 # machinery we wrote so far work
 #
 package CM::ModuleInt;
-our $VERSION = '0.4';
 use Moose;
 #use MooseX::Aliases;
 use overload    "*" => \&multiply,
                 '""'=> \&stringify,
+                '+'=> \&addition,
                 '=='=> \&equal;
+
+
+# TODO: add ModuloAddition.pm
 
 =head1 NAME
 
 CM::Group::ModuloMultiplicationGroup
-
-=head1 VERSION
-
-version 0.4
 
 =head1 DESCRIPTION
 
@@ -56,6 +55,12 @@ sub multiply {
     return CM::ModuleInt->new($right->object * $left->object);
 }
 
+sub addition {
+    my ($right,$left) = @_;
+    return CM::ModuleInt->new($right->object + $left->object);
+}
+
+
 sub equal {
     my ($right,$left) = @_;
     return $right->object == $left->object;
@@ -70,7 +75,6 @@ sub BUILDARGS {
 
 
 package CM::Group::ModuloMultiplication;
-our $VERSION = '0.4';
 # Modulo Multiplication Group
 # http://mathworld.wolfram.com/ModuloMultiplicationGroup.html
 use Moose;
@@ -92,14 +96,16 @@ sub operation {
     return $element;
 }
 
-sub compute_elements {
+sub _compute_elements {
     my ($self) = @_;
-    $self->tlabel(0); # start labels from 0
-    
-    for (0..-1+$self->n) {
-        print "adding element $_\n";
-        $self->add_to_elements(CM::ModuleInt->new($_));
-    };
+	sub {
+		$self->tlabel(0); # start labels from 0
+
+		for (0..-1+$self->n) {
+			print "adding element $_\n";
+			$self->add_to_elements(CM::ModuleInt->new($_));
+		};
+	}
 }
 
 sub _builder_order {

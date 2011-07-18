@@ -1,27 +1,31 @@
 #!/usr/local/bin/perl
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 
 # Thu 18 Feb 2010 06:14:49 PM EST
-
+# Stefan Petrea 
+#
+# simulation of Rubik's cube using OpenGL
+#
 
 package main;
-our $VERSION = '0.4';
-use OpenGL;
 use Carp;
 use Rubik::View;
 use Rubik::Model;
+use SDL::Event;
+use SDL::Events;
+use Time::HiRes qw(usleep);
+
 
 my $view = Rubik::View->new();
-$view->Init;
 my $model= Rubik::Model->new({view=>$view});
 
 # the following attributes exist
@@ -59,24 +63,25 @@ my $iter=0;
 
 
 
-#$model->scramble;
-
+#$model->scramble; # make a random series of moves to scramble the cube
 #       - add tests
 
-while(1) {
-    ++$iter;
-    #glRotatef(2,0,1,0); # rotate it while the moves are carried out
-
-    $view->DrawFrame();
-
-    $view->spin( $view->spin + $turnspeed );# need to take in account something where divisibility is not needed
-    if(  $view->spin % $turnangle == 0) {
-        $view->spin(0);
-        $model->move($faces[$iface]);
-        $iface = ($iface + 1) % @faces;
-        $view->currentmove($faces[$iface]);
-        print "Doing move $faces[$iface]\n";
-    };
-}
+$|=1;
 
 
+$view->CustomDrawCode(
+    sub {
+    usleep(10_000);
+        #glRotatef(2,0,1,0); # rotate it while the moves are carried out
+        $view->spin( $view->spin + $turnspeed );#need to take in account something where divisibility is not needed
+        if(  $view->spin % $turnangle == 0) {
+            $view->spin(0);
+            $model->move($faces[$iface]);
+            $iface = ($iface + 1) % @faces;
+            $view->currentmove($faces[$iface]);
+            print "Doing move $faces[$iface]\n";
+        };
+    }
+);
+
+$view->Init;

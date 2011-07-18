@@ -1,15 +1,14 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 package CM::Permutation::Cycle_Algorithm;
-our $VERSION = '0.4';
 use Moose;
 use List::AllUtils qw/first/;
 use CM::Permutation::Cycle;
@@ -20,10 +19,6 @@ extends 'CM::Permutation';
 =head1 NAME
 
 CM::Permutation::Cycle_Algorithm - An algorithm for finding the disjoint cycle decomposition of a permutation.
-
-=head1 VERSION
-
-version 0.4
 
 =head2 uncover_cycle()
 

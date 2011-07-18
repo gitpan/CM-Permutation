@@ -1,25 +1,20 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 package CM::Group::Altern;
-our $VERSION = '0.4';
 use Moose;
 extends 'CM::Group::Sym';
 
 =head1 NAME
 
 CM::Group::Altern - The alternating group of degree n.
-
-=head1 VERSION
-
-version 0.4
 
 =head1 DESCRIPTION
 
@@ -70,16 +65,18 @@ sub _builder_order {
 
 
 # TODO: must fix this with method modifiers - overrides method from Sym.pm
-sub compute_elements {
+sub _compute_elements {
     my ($self) = @_;
-    my $label = 0;
-    my @permutations;
-    my $p = new Algorithm::Permute([1..$self->n]);
-    while (my @new_perm = $p->next) {
-        my $new_one = CM::Permutation->new(@new_perm);
-        next unless $new_one->even_odd == 0; # only even permutations
-        $self->add_to_elements($new_one);
-    };
+	sub {
+		my $label = 0;
+		my @permutations;
+		my $p = new Algorithm::Permute([1..$self->n]);
+		while (my @new_perm = $p->next) {
+			my $new_one = CM::Permutation->new(@new_perm);
+			next unless $new_one->even_odd == 0; # only even permutations
+			$self->add_to_elements($new_one);
+		};
+	}
 }
 
 

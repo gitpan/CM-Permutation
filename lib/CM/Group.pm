@@ -1,39 +1,37 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 package CM::Group;
-our $VERSION = '0.4';
+use Moose::Util q/apply_all_roles/;
 use MooseX::Role::Parameterized;
 use Acme::AsciiArt2HtmlTable;
 use Math::Polynomial;
-use List::AllUtils qw/all first zip/;
+use List::AllUtils qw/all first zip uniq/;
 use Carp;
 use GraphViz;
 use Text::Table;
+use CM::Tuple;
 use strict;
 use warnings;
 requires '_builder_order';
-requires 'compute_elements';
+requires '_compute_elements';
 requires 'operation'; # wrapper function over operation of elements , REM : whenever I do  * in a group method
                       # I should replace that with  $self->operation($arg1,$arg2)
 parameter 'element_type' => ( isa   => 'Str' );
+
 
 
 =head1 NAME
 
 CM::Group - A parametrized role to abstract the characteristics of a group.
 
-
-=head1 VERSION
-
-version 0.4
 
 =head1 DESCRIPTION
 
@@ -69,10 +67,20 @@ Stefan Petrea, C<< <stefan.petrea at gmail.com> >>
 
 
 
-# parametrized roles are a lot like C++ templates
+# parametrized roles are a lot like C++ templates, 
+# update Wed Mar 10 06:17:44 2010 -> except they're not C++ templates and Perl is not C++
 
 role {
     my $p = shift;
+
+    my %args = @_;
+    my $consumer = $args{consumer};
+
+	has compute_elements => (
+		isa	=> 'CodeRef',
+		is	=> 'rw',
+        builder => '_compute_elements',
+	);
 
     my $T = $p->element_type;
 
@@ -86,9 +94,10 @@ role {
 
     # only used for assigning labels
     has tlabel  => (
-        isa     => 'Int',
-        is      => 'rw',
-        default => 1,
+	    isa     => 'Int',
+	    is      => 'rw',
+	    default => 1,
+	    lazy    => 1,
     );
 
     has order   => (
@@ -116,7 +125,6 @@ role {
         default  => 0,
     );
 
-
     # generating polynomial of group
     # Adventures in Group Theory - David Joyner 2nd edition
     method gen_polynomial => sub {
@@ -130,13 +138,16 @@ role {
 
     method add_to_elements => sub {
         my ($self,$newone) = @_;
-        $newone->label($self->tlabel);
+
+
+	$newone->label($self->tlabel);
         unshift @{$self->elements},$newone;
 
         croak "not all elements have labels"
         unless( all { defined($_->label) }(@{ $self->elements }) );
 
-        $self->tlabel( $self->tlabel + 1 );
+	$self->tlabel($self->tlabel + 1);
+
     };
 
     method perm2label => sub {
@@ -279,7 +290,7 @@ role {
 
         return $self if $self->computed;
 
-        $self->compute_elements();
+        $self->compute_elements()->();
 
         print "number of elements".scalar(@{$self->elements})."\n";
 
@@ -303,14 +314,82 @@ role {
                 ${*ij} = $self->operation(${*i},${*j});
 
                 croak "result is undefined"
-                unless defined(${*ij});
-
+                unless defined(${*ij}); 
                 ${*ij}->label($self->perm2label(${*ij}));
             }
         };
-        $self->computed(1);
+        $self->computed(1); # mark it as being computed
 
         return $self; # to be able to chain
+    };
+
+	# checks to see if a group is abelian or not
+	method abelian => sub {
+		my ($self) = @_;
+		# double not because we're not interested in the actual element, instead
+		# we just want to know if there is at least one breaking commutativity
+
+		my ($a,$b);
+
+		for my $a (@{$self->elements}) {
+			for my $b (@{$self->elements}) {
+				if($a*$b!=$b*$a) {
+					print "$a\n$b\n";
+					exit;
+				};
+			}
+		};
+		1;
+	};
+
+	method normal => sub {
+		my ($G,$N) = @_;
+		# basically just checks if each right coset is equal to the right coset
+		my $H;
+		my $res = 1;
+		for my $x ( @{ $G->elements } ) {
+			my @left_coset  = map { $x * $_ } @{$N->elements};
+			my @right_coset = map { $_ * $x } @{$N->elements};
+			my $H;
+			$H->{"$_"} = 1
+			for @left_coset;
+			$res &= $H->{"$_"} 
+			for @right_coset;
+			# have checked if left_coset and right_coset basically contain the same elements
+		};
+		return $res;
+	};
+
+
+    # this will return a commutator group
+	# (create a new group with the same type of elements as $self and just compute all the commutators
+	# put them in the group, mock up the compute_elements code ref and that's about it)
+    method commutator => sub {
+	    my ($self) = @_;
+		my $com_group = $self->meta->name->new({n=>$self->n});
+
+		my @elements=
+		uniq
+	    map {
+		    my $p = $_;
+		    map {
+				$p->com($_); 
+				#com does not always exist(as per implementation) as a method for the object(need to check if it has it defined)
+				#maybe the role CM::Group can check if there's a ->com for elements before composing
+		    } @{$self->elements};
+	    } @{$self->elements};
+
+
+		$com_group->add_to_elements($_)
+		for @elements;
+
+		$com_group->order(~~@elements); # another ideea would've been to make _build_order like _compute_elements
+										# and replace that here
+
+		#$com_group->elements(\@elements);
+		$com_group->compute_elements(sub{});
+
+		return $com_group;
     };
 
     method stringify => sub {
@@ -326,21 +405,55 @@ role {
         return "$table";
     };
 
-    # #this would be a general method so I could overload the CM::Group role to provide the "*" operator for "multiplying" groups
-    #
-    # so we could have stuff like Z_2 x Z_2 x Z_2  isomorphic to D_2n x Z_2
-    # 
-    # method direct_product => sub {
-    #   my ($self,$othergroup) = @_;
-    #   # not YET implemented
-    #
-    #   #make list of all 2-tuples like (x,y) with x from $self->elements and
-    #   #                                          y from $othergroup->elements
-    #   #need to define another type called CM::Tuple , need to overload in CM::Tuple the "*" operator to do product by components
-    #   #http://en.wikipedia.org/wiki/Direct_product
-    #   #order will have its own order() subroutine
-    #
-    #   #the new group created will be injected with the role CM::Group instantiated with type CM::Tuple
-    #   
-    # }
-}
+
+	# implemented the factor group, computed elements
+	# TODO: write code for choosing representants
+	#       this method should return a group
+	method factor => sub { # G/N
+		# the problem is choosing the right representatives for the equivalence classes
+		my ($G,$N) = @_;
+
+		#confess 'can only factor with group that\'s normal' unless $N->normal($G);
+		my $group = $G->meta->name->new({n=>$G->n});
+
+		my @all	= @{$G->elements};
+		my @classes;
+
+		while(@all) {
+			# take first element, build a coset, take that coset out , repeat..
+			my @new = map { $all[0] * $_  } @{$N->elements};# a new class
+
+			push @classes,\@new;
+			
+			
+			my @alln; # alln = all - new
+			
+			for my $a (@all) {
+				my $found;
+				for my $n (@new) {
+					if($a == $n) {
+						$found=1;
+						last;
+					};
+				};
+				push @alln,$a if !$found;
+			};
+			
+			@all = @alln;
+		};
+
+		# here we should have all classes of equivalence we need
+		# which are the actual elements of the factor group
+
+		return \@classes;
+	};
+    
+#    method group_product => sub {
+#	    my ($G,$H) = @_;
+#	    return {};
+#    };
+
+    #cartesian product of 2 groups
+};
+
+1;

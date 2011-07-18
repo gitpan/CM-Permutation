@@ -1,15 +1,14 @@
-# 
+#
 # This file is part of CM-Permutation
-# 
-# This software is copyright (c) 2010 by Stefan Petrea.
-# 
+#
+# This software is copyright (c) 2011 by Stefan Petrea.
+#
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
-# 
+#
 use strict;
 use warnings;
 package CM::Group::Sym;
-our $VERSION = '0.4';
 use Moose;
 use CM::Permutation;
 use CM::Permutation::Cycle_Algorithm;
@@ -46,10 +45,6 @@ with 'CM::Group' => { element_type => 'CM::Permutation'  };
 =head1 NAME
 
 CM::Group::Sym - An implementation of the finite symmetric group S_n
-
-=head1 VERSION
-
-version 0.4
 
 =head1 DESCRIPTION
 
@@ -249,15 +244,17 @@ sub BUILD {
 
 
 # generate all permutations of the set {1..n}
-sub compute_elements {# should be a standard method name for all groups
-    my ($self) = @_;
-    my $label = 0;
-    my @permutations;
-    my $p = new Algorithm::Permute([1..$self->n]);
-    while (my @new_perm = $p->next) {
-        my $new_one = CM::Permutation->new(@new_perm);
-        $self->add_to_elements($new_one);
-    };
+sub _compute_elements {# should be a standard method name for all groups
+	my ($self) = @_;
+	sub {
+		my $label = 0;
+		my @permutations;
+		my $p = new Algorithm::Permute([1..$self->n]);
+		while (my @new_perm = $p->next) {
+			my $new_one = CM::Permutation->new(@new_perm);
+			$self->add_to_elements($new_one);
+		};
+	}
 }
 
 
@@ -449,7 +446,7 @@ sub identity {
     my $e = CM::Permutation->new(1..$self->n);
     first {
         $_ == $e;
-    } @{ $self->operation_table->[0] };
+    } @{ $self->elements };
 }
 
 
@@ -611,6 +608,62 @@ sub dimino {
     shift @elements; # take out the dummy identity permutation we put at first for indexes to start at 1 in the begining
     return @elements;
 }
+
+
+# elements that fix $x
+sub stabilizer {
+	my ($self,@fixed) = @_;
+
+	grep 
+	{ 
+		my $elem = $_;
+		reduce { $a & $b }
+		(1,
+			map { $elem->perm->[$_] == $_}
+			(@fixed)
+		);
+	} 
+	@{$self->elements};
+}
+
+#
+# TODO:(very low priority because this is already done efficiently for perm groups)
+#
+# ----------------------------------------------------------------------------------
+# implement the following algorithm for computing power of an element in a group
+#  
+#    INPUT:
+#			element to raise	-> x
+#			order of group		-> n
+#			power to raise		-> p
+#
+#	 PROCESS:
+#			g = id_G
+#			w = x^2 # caching x^2
+#			if(p%2)
+#				g := xg
+#				p--
+#			else
+#				g := wg
+#				p-=2
+#
+#
+# ----------------------------------------------------------------------------------
+# computing the order of an element
+# (need to check handbook of computational group theory)
+#
+#	INPUT:
+#			element         	-> x
+#			order of group		-> n
+#
+#			for p is a divisor of n
+#				if(n==p)
+#					return n # there is no divisor ...
+#				if(power(x,p)==id_G)
+#					return recurse(x,n/p) # so   p  |  |x|   so we need to search in n/p
+#			return n # if no other divisor is found
+
+
 
 
 
