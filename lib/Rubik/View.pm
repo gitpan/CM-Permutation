@@ -27,6 +27,8 @@ vertices and current rotation angle and current move and the width/height of the
 
 =cut
 
+use constant ESCAPE => 37;
+
 
 # what face is currently rotated
 has currentmove => (
@@ -43,6 +45,22 @@ has CustomDrawCode => (
     default => sub { sub{}  },
     lazy    => 1,
 );
+
+has KeyboardCallback => (
+    isa     => 'CodeRef',
+    is      => 'rw',
+    default => sub { sub{  }  },
+);
+
+has glWindow => (
+    isa     => 'Any',
+    is      => 'rw',
+    default => undef,
+);
+
+
+
+
 
 
 # reimplementing getter/setter here
@@ -90,9 +108,16 @@ has model => (
     required => 0,
 );
 
+has drawcount => (
+    isa => 'Int',
+    is  => 'rw',
+    default => 0,
+);
 
-sub Draw {
+
+sub DrawObject {
     my ($self,$type,$sub) = @_; # type is what we want to draw, GL_QUAD , GL_POLYGON etc..
+
     glBegin($type);
     $sub->();
     glEnd();
@@ -165,9 +190,6 @@ sub ReSizeGLScene {
 
 sub Init {
     my ($self) = @_;
-
-    my $window;
-
 # --- Main program ---
 
 # Initialize GLUT state
@@ -187,24 +209,26 @@ sub Init {
     glutInitWindowPosition(0, 0);  
 
 # Open the window  
-    $window = glutCreateWindow("Jeff Molofee's GL Code Tutorial ... NeHe '99");  
+    $self->glWindow(glutCreateWindow("[Perl] Rubik's cube"));
 
 # Register the function to do all our OpenGL drawing.
 
-    my $draw_frame_ref = sub { $self->DrawFrame };
-    glutDisplayFunc($draw_frame_ref);  
+    my $draw_frame_subref = sub { $self->DrawFrame(@_) };
+
+    glutDisplayFunc($draw_frame_subref);  
 
 # Go fullscreen.  This is as soon as possible. 
-    glutFullScreen;
+    #glutFullScreen;
 
 # Even if there are no events, redraw our gl scene.
-    glutIdleFunc($draw_frame_ref);
+    glutIdleFunc($draw_frame_subref);
 
 # Register the function called when our window is resized. 
     glutReshapeFunc(\&ReSizeGLScene);
 
 # Register the function called when the keyboard is pressed.
-    glutKeyboardFunc(\&keyPressed);
+    #glutKeyboardFunc(\&KeyboardCallback);
+    glutKeyboardFunc(sub { $self->KeyboardCallback->(@_); } );
 
 # Initialize our window.
     $self->InitGL($self->width, $self->height);
@@ -213,6 +237,8 @@ sub Init {
     glutMainLoop;  
 }
 
+
+
 sub DrawFrame {
     my ($self,$sub) = @_;# sub is the sub called for drawing the frame
     # Clear the screen and the depth buffer
@@ -220,8 +246,8 @@ sub DrawFrame {
     glLoadIdentity;
 
 
-    say "rendered!";
-    glTranslatef(-1.5, -3.0, -16.0); 
+    #say "rendered!";
+    glTranslatef(1, -2.0, -20.0); 
     glRotatef(50,0,0,0);
     glRotatef(-45,0,1,0);
 
@@ -232,11 +258,21 @@ sub DrawFrame {
     glutSwapBuffers;
 }
 
+=head2 rotate_face() 
+
+This method recevies as parameter the face to rotate, and draws all the cubies but puts 
+the cubies to be rotate aside, and afterwards it draws those also at the rotated angle $self->spin.
+
+=cut
+
 
 sub rotate_face {
     my($self) = @_;
 
     my $face = $self->currentmove;
+    #say $face;
+
+    #return unless $face;
 
     my @p = (0,1,2); # coordinates inside @C
 
@@ -254,14 +290,15 @@ sub rotate_face {
                         ($face =~ /Li?/ && $x==0 ) ||
                         ($face =~ /Ri?/ && $x==2 ) ||
 
-                        ($face =~ /Di?/ && $y==0 ) ||
-                        ($face =~ /Ui?/ && $y==2 )
+                        ($face =~ /Di?/ && $y==2 ) ||
+                        ($face =~ /Ui?/ && $y==0 )
                 ) {
                     #print "$x $y $z\n";
                     push @to_rotate,[$x,$y,$z];
                     next;
                 };
-                say $self->model;
+                #say $self->model;
+
                 $self->model->cubies->[$x]->[$y]->[$z]->Draw();
             }
         }
@@ -273,8 +310,8 @@ sub rotate_face {
     my $rot_vec = {
         "F"         => [0  , 0  , -1 ] ,
         "B"         => [0  , 0  , +1 ] ,
-        "D"         => [0  , -1 , 0  ] ,
-        "U"         => [0  , +1 , 0  ] ,
+        "U"         => [0  , -1 , 0  ] ,
+        "D"         => [0  , +1 , 0  ] ,
         "L"         => [-1 , 0  , 0  ] ,
         "R"         => [+1 , 0  , 0  ] ,
     };
@@ -285,7 +322,11 @@ sub rotate_face {
     #my @dbg = @{$rot_vec->{$face}};
     #print "spin = ".$view->spin." rotvector: @dbg \n";
     #glRotatef(90,0,1,0);
-    glRotatef( ( $self->model->sense <=> 0 ) * $self->spin, @{$rot_vec->{$face}}); # the sense is established each time you set a currentmove
+
+
+    if($face) {
+        glRotatef( ( $self->model->sense <=> 0 ) * $self->spin, @{$rot_vec->{$face}}); # the sense is established each time you set a currentmove
+    };
 
     for my $pair (@to_rotate) {
         my ($x,$y,$z) = @$pair;

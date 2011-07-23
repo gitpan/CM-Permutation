@@ -16,7 +16,10 @@ my %WriteMakefileArgs = (
     'ExtUtils::MakeMaker' => '6.30'
   },
   'DISTNAME' => 'CM-Permutation',
-  'EXE_FILES' => [],
+  'EXE_FILES' => [
+    'bin/rubik_demo.pl',
+    'bin/rubik_game.pl'
+  ],
   'LICENSE' => 'perl',
   'NAME' => 'CM::Permutation',
   'PREREQ_PM' => {
@@ -38,7 +41,7 @@ my %WriteMakefileArgs = (
     'Text::Table' => '1.114',
     'overload' => '0'
   },
-  'VERSION' => '0.9',
+  'VERSION' => '0.93',
   'test' => {
     'TESTS' => 't/*.t'
   }

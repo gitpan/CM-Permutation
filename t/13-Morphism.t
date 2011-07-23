@@ -1,8 +1,9 @@
+use strict;
+use warnings;
+use lib './lib';
 use CM::Morphism;
 use CM::Group::Sym;
 use Test::More;
-use strict;
-use warnings;
 
 my $G = CM::Group::Sym->new({n=>4});
 $G->compute_elements()->();

@@ -1,4 +1,5 @@
 package TestType;
+use lib './lib';
 use Moose;
 extends 'CM::Tuple';
 

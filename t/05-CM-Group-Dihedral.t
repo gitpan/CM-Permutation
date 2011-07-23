@@ -1,4 +1,5 @@
 use Test::More;
+use lib './lib';
 use CM::Group::Dihedral;
 
 my $g = CM::Group::Dihedral->new({n=>5});

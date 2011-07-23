@@ -448,7 +448,7 @@ For example permutation (9,6,4,8,5,3,7,10,1,2) can be representated as a braid l
 
 =begin html
 
-<p><center><img src="images/a.PNG" /></center></p>
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/images/a.PNG" /></center></p>
 
 =end html
 
@@ -456,7 +456,7 @@ and permutation (6,10,2,9,6,1,7,8,4,5) is like this
 
 =begin html
 
-<p><center><img src="images/b.PNG" /></center></p>
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/images/b.PNG" /></center></p>
 
 =end html
 
@@ -464,7 +464,7 @@ Then you can also compute a*b
 
 =begin html
 
-<p><center><img src="images/atimesb.PNG" /></center></p>
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/images/atimesb.PNG" /></center></p>
 
 =end html
 
@@ -472,7 +472,7 @@ And also a*b*a^-1
 
 =begin html
 
-<p><center><img src="images/aconjb.PNG" /></center></p>
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/images/aconjb.PNG" /></center></p>
 
 =end html
 
@@ -480,7 +480,7 @@ And also [a,b] which is a*b*a^-1*b^-1
  
 =begin html
 
-<p><center><img src="images/acommb.PNG" /></center></p>
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/images/acommb.PNG" /></center></p>
 
 =end html
 
@@ -492,7 +492,7 @@ Cycles have the following shape (except they can have some fixed points inside t
 
 =begin html
 
-<p><center><img src="images/cycle1.PNG" /></center></p>
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/images/cycle1.PNG" /></center></p>
 
 =end html
 
@@ -501,7 +501,7 @@ or like this
 
 =begin html
 
-<p><center><img src="images/cycle2.PNG" /></center></p>
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/images/cycle2.PNG" /></center></p>
 
 =end html
 
@@ -520,7 +520,7 @@ To understand better how transpositions and cycles interact let's take a look at
 
 =begin html
 
-<p><center><img src="images/cycle_glue.png" /></center></p>
+<p><center><img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/images/cycle_glue.png" /></center></p>
 
 =end html
 

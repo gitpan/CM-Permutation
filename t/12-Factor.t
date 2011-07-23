@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use lib './lib';
 use Test::More;
 use CM::Group::Sym;
 use CM::Permutation;

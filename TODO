@@ -1,5 +1,8 @@
 
+* Fix dimino bug, there are duplicate elements generated in the Dimino implementation
 
-Branches:
+* Refactor the whole CM::Group
+
+* Branches:
 
 There are many branches that need to be merged ... when will that happen, dunno.

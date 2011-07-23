@@ -14,7 +14,6 @@ use warnings;
 use Moose;
 use CM::Permutation;
 use List::AllUtils qw/reduce/;
-
 # we'll be modelling Rubik's cube here
 
 =pod
@@ -49,26 +48,18 @@ using the order() method on the result, so for example:
 	my $r = CM::Rubik->new;
 	print $r->comb('FURBL');
 
-	252
-
-
-
-
+	60
 
 =begin html
-
-<p><center>
 
 <img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/CM-Permutation/rubik1.png" />
 <img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/CM-Permutation/rubik2.png" />
 <img src="http://perlhobby.googlecode.com/svn/trunk/scripturi_perl_teste/cm-permutation/cpan/CM-Permutation/rubik3.png" />
 
-</center></p>
-
 =end html
 
-To understand where the permutations came from I used the following unfolded version of the cube, the numbers are labels
-for the facelets:
+To understand where the permutations came from I used the following unfolded version of the cube( also called net ), the numbers are labels
+for the faces of the cubies:
 
 
                      .----|-----|----.
@@ -291,34 +282,6 @@ sub L {
 sub D{
     my ($self) = @_;
     $self->rotate_face(
-        18,15,12,
-        17,14,11,
-        16,13,10
-    )*
-    $self->p({
-        39=>28,
-        38=>29,
-        37=>30,
-
-        48=>39,
-        47=>38,
-        46=>37,
-
-        1=>48,
-        2=>47,
-        3=>46,
-
-        28=>1,
-        29=>2,
-        30=>3,
-    });
-
-}
-
-
-sub U {
-    my ($self) = @_;
-    $self->rotate_face(
         19..27
     )*
     $self->p({
@@ -341,6 +304,33 @@ sub U {
 }
 
 
+sub U {
+    my ($self) = @_;
+    $self->rotate_face(
+        18,15,12,
+        17,14,11,
+        16,13,10
+    )*
+    $self->p({
+        39=>28,
+        38=>29,
+        37=>30,
+
+        48=>39,
+        47=>38,
+        46=>37,
+
+        1=>48,
+        2=>47,
+        3=>46,
+
+        28=>1,
+        29=>2,
+        30=>3,
+    });
+}
+
+
 sub comb { # combination of a series of moves
     my ($self,$moves) = @_;
 
@@ -355,5 +345,12 @@ sub comb { # combination of a series of moves
 
     return reduce { $a * $self->$b } ($first,split(//,$moves));
 }
+
+
+=head1 SEE ALSO
+
+L<http://en.wikipedia.org/wiki/Net_(polyhedron)>
+
+=cut
 
 1;

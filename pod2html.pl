@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 #
 # This file is part of CM-Permutation
 #
@@ -9,10 +9,10 @@
 #
 use strict;
 use warnings;
-#!/usr/bin/perl
 
 #switch between the first two lines depending on what system I am
 use strict;
+use warnings;
 use Pod::Simple::HTML;
 
 my $parser = Pod::Simple::HTML->new();

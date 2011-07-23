@@ -685,13 +685,6 @@ for example the graph for S_4 with generators the transpositions (1,2) ; (2,3) ;
 Fortunately this particular cayley graph can be arranged as a truncated octahedron and it's one of the 13 Archimedian solids , 
 it's also called a permutahedron.
 
-L<http://en.wikipedia.org/wiki/Truncated_octahedron>
-
-L<http://en.wikipedia.org/wiki/Cayley_graph>
-=cut
-
-# polyhedrons generated as an arrangement of the cayley graph are called permutahedra
-
 
 =pod
 
@@ -704,6 +697,18 @@ Some theorems and properties of groups or permutations are used as tests.
     [1] Joseph Rotman   - An Introduction to the Theory of Groups
     [2] Gregory Butler  - Fundamental Algorithms for Permutation Groups (Lecture Notes in Computer Science)
     [3] http://www.jaapsch.net/puzzles/cayley.htm
+
+
+=head1 SEE ALSO
+
+L<http://en.wikipedia.org/wiki/Permutohedron>
+
+L<http://en.wikipedia.org/wiki/Archimedean_solid>
+
+L<http://en.wikipedia.org/wiki/Truncated_octahedron>
+
+L<http://en.wikipedia.org/wiki/Cayley_graph>
+
 
 =head1 AUTHOR
 

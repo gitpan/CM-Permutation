@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use lib './lib';
 use Test::More;
 use List::AllUtils qw/all max/;
 use CM::Rubik;
@@ -53,9 +54,7 @@ sub legend {
     }
 }
 
-
-
-ok(($F*$U*$R*$B*$L)->order()    == 252,'order of FURBL is 252');
+ok(($F*$U*$R*$B*$L)->order()    == 60,'order of FURBL is 252');
 
 ok(($F*$B*$D*$U*$L*$R)->order() == 4, 'order of FBDULR is 4');
 
