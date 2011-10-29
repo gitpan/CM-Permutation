@@ -9,6 +9,9 @@
 use strict;
 use warnings;
 package CM::Permutation::Cycle;
+{
+  $CM::Permutation::Cycle::VERSION = '0.94';
+}
 use Moose;
 use List::AllUtils qw/min max first true/;
 use Data::Dumper;
@@ -109,8 +112,24 @@ around 'multiply' => sub {
     return $right->$orig($left);
 };
 
+=pod
+
+=head1 NAME
+
+CM::Permutation::Cycle - This module describes permutation cycles
 
 
+=head1 VERSION
+
+version 0.94
+
+=head1 SEE ALSO
+
+
+L<http://en.wikipedia.org/wiki/Cycle_%28mathematics%29>
+
+
+=cut
 
 
 

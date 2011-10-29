@@ -9,11 +9,32 @@
 use strict;
 use warnings;
 package CM::EquivalenceClass;
+{
+  $CM::EquivalenceClass::VERSION = '0.94';
+}
 use Moose;
 use Set::Scalar;
 
 use overload '==' => 'equal';
 
+=pod
+
+=head1 NAME
+
+CM::EquivalenceClass - Module for describing equivalence classes
+
+=head1 VERSION
+
+version 0.94
+
+This module is just a stub for the moment.
+
+
+
+=cut
+
+
+# TODO: this is in initial phase of implementation(there's a lot of stuff to fill in here).
 
 
 # implementation problems
@@ -54,11 +75,9 @@ sub equal {
 	
 	return 1 if $x->representant == $y->representant;
 	
+        # * means intersection for Set::Scalar
 	return (
 			Set::Scalar->new(@{$x->elements}) * 
 			Set::Scalar->new(@{$y->elements})
 			)->size;
 }
-
-
-

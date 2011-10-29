@@ -9,6 +9,9 @@
 use strict;
 use warnings;
 package CM::Group::Dihedral;
+{
+  $CM::Group::Dihedral::VERSION = '0.94';
+}
 use Moose;
 use CM::Permutation;
 use Carp;
@@ -26,6 +29,10 @@ with 'CM::Group' => { element_type => 'CM::Permutation'  };
 =head1 NAME
 
 CM::Group::Dihedral - An implementation of the finite dihedral group D_2n
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 

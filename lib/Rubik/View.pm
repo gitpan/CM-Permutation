@@ -9,6 +9,9 @@
 use strict;
 use warnings;
 package Rubik::View;
+{
+  $Rubik::View::VERSION = '0.94';
+}
 use Moose;
 use OpenGL qw(:all);
 use Time::HiRes qw(usleep);
@@ -19,6 +22,10 @@ use feature ':5.10';
 =head1 NAME
 
 Rubik::View - The view module for Rubik's cube simulator
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 
@@ -52,6 +59,20 @@ has KeyboardCallback => (
     default => sub { sub{  }  },
 );
 
+has MouseMoveCallback => (
+    isa     => 'CodeRef',
+    is      => 'rw',
+    default => sub { sub{  }  },
+);
+
+has MouseClickCallback => (
+    isa     => 'CodeRef',
+    is      => 'rw',
+    default => sub { sub{  }  },
+);
+
+
+
 has glWindow => (
     isa     => 'Any',
     is      => 'rw',
@@ -59,6 +80,15 @@ has glWindow => (
 );
 
 
+# previous mouse state
+has pmouse_state => (
+    isa => 'HashRef',
+    is  => 'rw',
+    default => sub {
+      {
+      }
+    },
+);
 
 
 
@@ -113,6 +143,37 @@ has drawcount => (
     is  => 'rw',
     default => 0,
 );
+
+
+
+# Euler view angles. These can change depending on various mouse movements
+has view_angles => (
+    isa => 'ArrayRef[Num]',
+    is  => 'rw',
+    default => sub { [0,0,0] },
+);
+
+has mouse_pos => (
+    isa => 'ArrayRef[Int]',
+    is  => 'rw',
+    default => sub { [0,0] },
+);
+
+
+#
+#           | y
+#           |
+#           | 
+#           | O
+#           |__________  x
+#          /
+#         /
+#        /
+#       /z  
+#
+#  [xOy,xOz,zOy]
+#
+
 
 
 sub DrawObject {
@@ -228,7 +289,9 @@ sub Init {
 
 # Register the function called when the keyboard is pressed.
     #glutKeyboardFunc(\&KeyboardCallback);
-    glutKeyboardFunc(sub { $self->KeyboardCallback->(@_); } );
+    glutKeyboardFunc(sub      { $self->KeyboardCallback->(@_);   } );
+    glutPassiveMotionFunc(sub { $self->MouseMoveCallback->(@_);  } );
+    glutMouseFunc(sub         { $self->MouseClickCallback->(@_); } );
 
 # Initialize our window.
     $self->InitGL($self->width, $self->height);
@@ -249,13 +312,25 @@ sub DrawFrame {
     #say "rendered!";
     glTranslatef(1, -2.0, -20.0); 
     glRotatef(50,0,0,0);
-    glRotatef(-45,0,1,0);
+    #glRotatef(-45,0,1,0);
 
     $self->CustomDrawCode->();
 
+
+    $self->draw_net;
+    $self->mouse_rotate_view;
     $self->rotate_face;
 
     glutSwapBuffers;
+}
+
+
+
+# rotate view due to mouse motion
+sub mouse_rotate_view {
+  my ($self) = @_;
+  glRotatef($self->view_angles->[0],1,0,0);
+  glRotatef($self->view_angles->[1],0,1,0);
 }
 
 =head2 rotate_face() 
@@ -264,6 +339,54 @@ This method recevies as parameter the face to rotate, and draws all the cubies b
 the cubies to be rotate aside, and afterwards it draws those also at the rotated angle $self->spin.
 
 =cut
+
+our $L = 0.6;
+sub draw_square {
+  my ($self,$pos,$color) = @_;
+
+  glColor3f(@$color);
+  glBegin(GL_QUADS);                      
+    glVertex3f($pos->[0]-$L,$pos->[1]+$L, 0);         
+    glVertex3f($pos->[0]+$L,$pos->[1]+$L, 0);        
+    glVertex3f($pos->[0]+$L,$pos->[1]-$L, 0);       
+    glVertex3f($pos->[0]-$L,$pos->[1]-$L, 0);      
+  glEnd();                           
+}
+
+
+
+sub draw_net {
+  my ($self) = @_;
+  my $facelets2net =
+  [
+    [ 0  , 0  , 0  , 37 , 38 , 39 , 0  , 0  , 0  , 0  , 0  , 0 ],
+    [ 0  , 0  , 0  , 40 , 41 , 42 , 0  , 0  , 0  , 0  , 0  , 0 ],
+    [ 0  , 0  , 0  , 43 , 44 , 45 , 0  , 0  , 0  , 0  , 0  , 0 ],
+    [ 48 , 51 , 54 , 21 , 24 , 27 , 36 , 33 , 30 , 18 , 15 , 12],
+    [ 47 , 50 , 53 , 20 , 23 , 26 , 35 , 32 , 29 , 17 , 14 , 11],
+    [ 46 , 49 , 52 , 19 , 22 , 25 , 34 , 31 , 28 , 16 , 13 , 10],
+    [ 0  , 0  , 0  , 7  , 8  , 9  , 0  , 0  , 0  , 0  , 0  , 0 ],
+    [ 0  , 0  , 0  , 4  , 5  , 6  , 0  , 0  , 0  , 0  , 0  , 0 ],
+    [ 0  , 0  , 0  , 1  , 2  , 3  , 0  , 0  , 0  , 0  , 0  , 0 ],
+  ];
+
+  for my $y ( 0..9 ) {
+    for my $x ( 0..11)  {
+      next unless $facelets2net->[$y]->[$x];
+
+
+      my $colors = $self->model->getColor(
+        $facelets2net->[$y]->[$x] - 1
+      );
+
+      $self->draw_square(
+        [-13+($L*$x*2.1),6+($L*$y*2.1)],
+        $colors
+      )
+    }
+  }
+
+}
 
 
 sub rotate_face {

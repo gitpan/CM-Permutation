@@ -9,6 +9,9 @@
 use strict;
 use warnings;
 package CM::Group::Sym;
+{
+  $CM::Group::Sym::VERSION = '0.94';
+}
 use Moose;
 use CM::Permutation;
 use CM::Permutation::Cycle_Algorithm;
@@ -45,6 +48,10 @@ with 'CM::Group' => { element_type => 'CM::Permutation'  };
 =head1 NAME
 
 CM::Group::Sym - An implementation of the finite symmetric group S_n
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 

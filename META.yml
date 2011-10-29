@@ -6,7 +6,7 @@ build_requires: {}
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.200012, CPAN::Meta::Converter version 2.110440'
+generated_by: 'Dist::Zilla version 4.300000, CPAN::Meta::Converter version 2.110440'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -17,17 +17,27 @@ requires:
   Algorithm::Permute: 0
   Bit::Vector: 7.1
   Carp: 0
+  Devel::REPL: 1.003009
+  GD::SVG: 0.33
   GraphViz: 0
   List::AllUtils: 0.02
   Math::BigInt: 0
+  Math::Complex: 1.56
+  Math::Factor::XS: 0.38
+  Math::Pari: 2.01080605
   Math::Polynomial: 1.002
+  Math::Polynomial::Solve: 2.50
+  Math::Primality: 0.04
+  Math::Prime::XS: 0.23
+  Math::Symbolic: 0.606
   Moose: 0.92
   MooseX::Role::Parameterized: 0.17
   OpenGL: 0.64
+  PDL: 2.4.6
   Params::Validate: 0.94
   Storable: 0
   Test::Deep: 0.106
   Test::More: 0
   Text::Table: 1.114
   overload: 0
-version: 0.93
+version: 0.94

@@ -9,6 +9,9 @@
 use strict;
 use warnings;
 package CM::Group;
+{
+  $CM::Group::VERSION = '0.94';
+}
 use Moose::Util q/apply_all_roles/;
 use MooseX::Role::Parameterized;
 use Acme::AsciiArt2HtmlTable;
@@ -32,6 +35,10 @@ parameter 'element_type' => ( isa   => 'Str' );
 
 CM::Group - A parametrized role to abstract the characteristics of a group.
 
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 

@@ -1,8 +1,22 @@
-
 * Fix dimino bug, there are duplicate elements generated in the Dimino implementation
 
 * Refactor the whole CM::Group
 
-* Branches:
+* Branches There are many branches that need to be merged ... when will that happen, dunno.
 
-There are many branches that need to be merged ... when will that happen, dunno.
+    [MERGED]   mathshell
+    [UNMERGED] dimino_fixes_and_morphisms
+    [UNMERGED] distributed_solver
+    [UNMERGED] galois_theory
+    [UNMERGED] isomorphism_invariants
+    [UNMERGED] mathshell
+    [UNMERGED] new_perm_algo_SJT
+    [UNMERGED] revert_order_elements
+    [UNMERGED] solve_cube
+    [UNMERGED] special_polynomials
+    [UNMERGED] tables_gfx
+
+* Leave in this repo just the stuff for CM::Permutation and rubik's cube and get everything else out to other repos
+
+
+

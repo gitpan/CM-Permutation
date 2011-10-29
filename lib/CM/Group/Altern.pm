@@ -9,12 +9,19 @@
 use strict;
 use warnings;
 package CM::Group::Altern;
+{
+  $CM::Group::Altern::VERSION = '0.94';
+}
 use Moose;
 extends 'CM::Group::Sym';
 
 =head1 NAME
 
 CM::Group::Altern - The alternating group of degree n.
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 

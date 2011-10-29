@@ -9,6 +9,9 @@
 use strict;
 use warnings;
 package CM::Tuple;
+{
+  $CM::Tuple::VERSION = '0.94';
+}
 use Moose;
 use strict;
 use warnings;
@@ -20,12 +23,27 @@ use overload
 '**' => 'power',
 '""' => 'stringify'; 
 
+=pod
+
+=head1 NAME
+
+CM::Tuple - Tuples of elements from different groups
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 
 CM::Tuple is used to describe a tuple of 2 elements.
 The composition operation is on components.
 This is written in order to facilitate the construction of direct products of groups whose elements are these tuples.
+
+=head1 SEE ALSO
+
+
+L<CM::Product>
+
 
 =cut
 

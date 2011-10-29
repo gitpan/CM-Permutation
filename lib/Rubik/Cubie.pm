@@ -9,7 +9,10 @@
 use strict;
 use warnings;
 #==================================================================================================================================
-package Rubik::Cubie; # small cubie that composes the big one
+package Rubik::Cubie;
+{
+  $Rubik::Cubie::VERSION = '0.94';
+} # small cubie that composes the big one
 use Moose;
 use OpenGL; 
 
@@ -18,6 +21,10 @@ use OpenGL;
 
 Rubik::Cubie
 
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 
@@ -58,6 +65,8 @@ has colours => (
     },
 );
 
+
+# this contains indexes of the points that make up each face of the cubie
 has faces => (
     isa => 'ArrayRef[ArrayRef[Int]]',
     is  =>'rw',

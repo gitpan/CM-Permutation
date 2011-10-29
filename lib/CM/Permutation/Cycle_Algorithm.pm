@@ -9,16 +9,24 @@
 use strict;
 use warnings;
 package CM::Permutation::Cycle_Algorithm;
+{
+  $CM::Permutation::Cycle_Algorithm::VERSION = '0.94';
+}
 use Moose;
 use List::AllUtils qw/first/;
 use CM::Permutation::Cycle;
 extends 'CM::Permutation';
 
+use overload '""' => 'str_decomposed'; # "" and == are used by uniq from List::AllUtils in the tests
 =pod
 
 =head1 NAME
 
 CM::Permutation::Cycle_Algorithm - An algorithm for finding the disjoint cycle decomposition of a permutation.
+
+=head1 VERSION
+
+version 0.94
 
 =head2 uncover_cycle()
 

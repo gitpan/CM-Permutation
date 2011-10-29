@@ -9,12 +9,33 @@
 use strict;
 use warnings;
 package CM::Group::Product;
+{
+  $CM::Group::Product::VERSION = '0.94';
+}
 use Moose;
 use CM::Tuple;
 use strict;
 use warnings;
 with 'CM::Group' => { element_type => 'CM::Tuple'  };
 
+
+=pod
+
+=head1 NAME 
+
+CM::Group::Product - The direct product of two groups
+
+
+
+=head1 VERSION
+
+version 0.94
+
+=head1 SEE ALSO
+
+L<http://en.wikipedia.org/wiki/Direct_product_of_groups>
+
+=cut
 
 #   #http://en.wikipedia.org/wiki/Direct_product
 has groupG => (

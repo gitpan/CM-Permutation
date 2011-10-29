@@ -1,4 +1,6 @@
+#!/bin/bash
 rm -rf nytprof*
-perl -d:NYTProf t/leak_proof.t
+perl -d:NYTProf -Ilib t/*.t
 nytprofhtml
-opera ./nytprof/index.html
+google-chrome ./nytprof/index.html
+

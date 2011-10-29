@@ -9,13 +9,27 @@
 use strict;
 use warnings;
 package CM::Group::ModuloAddition;
+{
+  $CM::Group::ModuloAddition::VERSION = '0.94';
+}
 use Moose;
 extends 'CM::Group::ModuloMultiplication';
 
 
-=head1 DESCRIPTION
+=pod
 
-The group (Z_n,+)
+=head1 NAME
+
+CM::Group::ModuloAddition - The group (Z_n,+)
+
+=head1 VERSION
+
+version 0.94
+
+=head1 SEE ALSO
+
+L<http://en.wikipedia.org/wiki/Integers>
+
 
 =cut
 

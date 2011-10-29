@@ -9,6 +9,9 @@
 use strict;
 use warnings;
 package CM::Rubik;
+{
+  $CM::Rubik::VERSION = '0.94';
+}
 use strict;
 use warnings;
 use Moose;
@@ -21,6 +24,10 @@ use List::AllUtils qw/reduce/;
 =head1 NAME
 
 CM::Rubik - Rubik's cube
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 

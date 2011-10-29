@@ -21,11 +21,26 @@ use Time::HiRes qw(usleep);
 use List::AllUtils qw/any/;
 use feature ':5.10';
 
+=pod
+
+=head1 NAME
+
+rubik_game.pl - Rubik's cube game
+
+=head1 VERSION
+
+version 0.94
+
+Use S to scramble the cube.
+
+Use F(ront),B(ack),U(p),D(own),L(eft),R(ight) to move the cube.
+
+=cut
 
 my $view = Rubik::View->new();
 my $model= Rubik::Model->new({view=>$view});
 
-
+#TODO: All controller logic needs to be moved to CM::Rubik::Controller
 
 my $turnspeed = 3;
 my $turnangle = 90;
@@ -51,10 +66,12 @@ $view->CustomDrawCode(
                 $move_lock = 1;
                 my $new_key = shift @move_buffer;
 
-                if($new_key eq 'S') {
-                    $model->scramble;
-                    return;
+                given($new_key) {
+                    when('S'){ $model->scramble; return;  }
+                    when('Z'){ $model->reset;    return;  }
+                    default  {}
                 };
+
 
 
                 $view->currentmove($new_key);
@@ -81,22 +98,59 @@ $view->CustomDrawCode(
 
 $view->KeyboardCallback(
     sub {
-        my ($self) = @_;
-        # Shift the unsigned char key, and the x,y placement off @_, in
-        # that order.
         my ($key, $x, $y) = @_;
 
-
-        my @allowed_moves = map { ord $_ } split //,"furblds";
+        my @allowed_keys = map { ord $_ } split //,"furbldsz";
 
         #print Dumper \@allowed_moves;
         #print Dumper \$key;
 
-        if( any { $key == $_ } @allowed_moves ) {
+        if( any { $key == $_ } @allowed_keys ) {
             #print "$key\n";
             push @move_buffer, uc(chr($key));
         };
     }
+);
+
+$view->MouseMoveCallback(
+  sub {
+    my ($x,$y) = @_;
+    #print Dumper \@_;
+    
+    $ydiff = $y - $view->mouse_pos->[1];
+    $xdiff = $x - $view->mouse_pos->[0];
+
+
+
+
+    my $num = int($view->view_angles->[0]/90) % 4;
+    printf "y -> %d , revert -> %d\n" , $view->view_angles->[0],($num == 1 || $num == 2);
+
+    # The ternary operator expression is trying to account for reverting Ox movements when cube is upside down
+    # still a bit buggy..
+
+    $view->view_angles->[1] += ( $num == 1 || $num == 2  ? -1 : +1 ) * $xdiff;
+    $view->view_angles->[0] += $ydiff;
+
+
+
+    @{$view->mouse_pos} = @_;
+  }
+);
+
+$view->MouseClickCallback(
+  sub {
+    given("$_[0]$_[1]") {
+      when("00") {
+
+      }
+      when("01") {
+
+      }
+      default {
+      }
+    };
+  }
 );
 
 

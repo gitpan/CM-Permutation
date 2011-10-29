@@ -9,11 +9,34 @@
 use strict;
 use warnings;
 package CM::Morphism;
+{
+  $CM::Morphism::VERSION = '0.94';
+}
 use strict;
 use warnings;
 use Moose;
 use Moose::Util::TypeConstraints;
 use List::AllUtils qw/all uniq/;
+
+=pod
+
+=head1 NAME
+
+CM::Morphism - This module describes a group homomorphism
+
+
+=head1 VERSION
+
+version 0.94
+
+=head1 SEE ALSO
+
+L<http://en.wikipedia.org/wiki/Group_homomorphism>
+
+
+=cut
+
+
 
 use overload '*' => 'composition';
 

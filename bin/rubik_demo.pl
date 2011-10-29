@@ -20,6 +20,23 @@ use Rubik::View;
 use Rubik::Model;
 use Time::HiRes qw(usleep);
 
+use constant ESCAPE => 37;
+
+=pod
+
+=head1 NAME
+
+rubik_demo.pl - just some moves made repeatedly to a rubik's cube
+
+
+=head1 VERSION
+
+version 0.94
+
+=cut
+
+
+
 
 my $view = Rubik::View->new();
 my $model= Rubik::Model->new({view=>$view});
@@ -71,27 +88,16 @@ $view->KeyboardCallback(
         # that order.
         my ($key, $x, $y) = @_;
 
-        # Avoid thrashing this procedure
-        # Note standard Perl does not support usleep
-        # For finer resolution sleep than seconds, try:
-        #    'select undef, undef, undef, 0.1;'
-        # to sleep for (at least) 0.1 seconds
-        sleep(100);
-
-        # If f key pressed, undo fullscreen and resize to 640x480
         if ($key == ord('f')) {
 
             # Use reshape window, which undoes fullscreen
             glutReshapeWindow(640, 480);
         }
 
-        # If escape is pressed, kill everything.
         if ($key == ESCAPE) 
         { 
-            # Shut down our window 
             glutDestroyWindow($self->glWindow); 
 
-            # Exit the program...normal termination.
             exit(0);                   
         };
     }

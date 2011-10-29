@@ -12,6 +12,9 @@ use warnings;
 # machinery we wrote so far work
 #
 package CM::ModuleInt;
+{
+  $CM::ModuleInt::VERSION = '0.94';
+}
 use Moose;
 #use MooseX::Aliases;
 use overload    "*" => \&multiply,
@@ -25,6 +28,10 @@ use overload    "*" => \&multiply,
 =head1 NAME
 
 CM::Group::ModuloMultiplicationGroup
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 
@@ -75,6 +82,9 @@ sub BUILDARGS {
 
 
 package CM::Group::ModuloMultiplication;
+{
+  $CM::Group::ModuloMultiplication::VERSION = '0.94';
+}
 # Modulo Multiplication Group
 # http://mathworld.wolfram.com/ModuloMultiplicationGroup.html
 use Moose;

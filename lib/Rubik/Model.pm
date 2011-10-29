@@ -9,6 +9,9 @@
 use strict;
 use warnings;
 package Rubik::Model;
+{
+  $Rubik::Model::VERSION = '0.94';
+}
 use strict;
 use warnings;
 use Moose;
@@ -24,6 +27,10 @@ use overload  '""' => 'stringify';
 
 Rubik::Model
 
+
+=head1 VERSION
+
+version 0.94
 
 =head1 DESCRIPTION
 
@@ -331,6 +338,23 @@ sub setColor { # parameter will be a number in [0..53] and you'll set the colour
 }
 
 
+=head1 reset()
+
+This method will reset the cube by multiplying the current state with its inverse.
+
+By doing that the state of the module will become the identical permutation.
+
+=cut
+
+
+
+sub reset {
+    my ($self) = @_;
+    my $state_inverse = $self->state ** -1;
+    $self->move_perm( $state_inverse );
+}
+
+
 sub move_perm { #move according to a given permutation
     my ($self,$perm) = @_;
     confess "argument not CM::Permutation" unless $perm->isa('CM::Permutation');
@@ -513,4 +537,3 @@ Stefan Petrea, C<< <stefan.petrea at gmail.com> >>
 1;
 
 #==================================================================================================================================
-
